@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Travel Planner</title>
+    <title>Travel</title>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -176,6 +176,8 @@
         .time-input-minimal:focus {
             color: #fbbf24;
         }
+        
+        /* 移除原本的 time-input-first 樣式，不再需要 */
         
         /* 修改：確保日期 icon 在深色模式下變成黃色 (保留給其他地方如 Modal 使用) */
         ::-webkit-calendar-picker-indicator {
@@ -424,7 +426,7 @@
                                                                 title="點擊修改出發時間">
                                                             {{ item.arrivalTime }}
                                                         </button>
-                                                                
+                                                               
                                                         <!-- 如果不是第一個：顯示純文字 (自動計算) -->
                                                         <span v-else class="text-[#e7e5e4] text-lg font-bold font-mono tracking-wide leading-none my-1">{{ item.arrivalTime }}</span>
                                                         
@@ -573,12 +575,12 @@
                                 <div class="bg-[#292524] rounded-3xl p-5 border border-[#44403c] shadow-lg">
                                     <div class="flex justify-between items-center mb-2">
                                         <h3 class="text-[#fbbf24] font-bold flex items-center gap-2 text-lg"><i class="fa-solid fa-passport"></i> 簽證資訊</h3>
-                                        <button @click="toggleUser('visa')" class="text-[10px] px-3 py-1 rounded-full bg-[#44403c] text-[#fbbf24] hover:bg-[#57534e] transition">{{ info.visa.currentUser === 'user1' ? 'User 1' : 'User 2' }} <i class="fa-solid fa-repeat ml-1"></i></button>
+                                        <button @click="toggleUser('visa')" class="text-[10px] px-3 py-1 rounded-full bg-[#44403c] text-[#fbbf24] hover:bg-[#57534e] transition">{{ info.visa.currentUser === 'user1' ? 'HungJung Hsu' : 'ChiFen Tai' }} <i class="fa-solid fa-repeat ml-1"></i></button>
                                     </div>
                                     <div>
                                         <div class="relative h-48 bg-[#1c1917] rounded-xl border border-[#44403c] overflow-hidden flex items-center justify-center group cursor-pointer hover:border-[#fbbf24] transition border-dashed" @click="triggerFileInput('visa-file')">
                                             <img v-if="info.visa.images[info.visa.currentUser]" :src="info.visa.images[info.visa.currentUser]" class="w-full h-full object-contain">
-                                            <div v-else class="text-[#57534e] flex flex-col items-center"><i class="fa-solid fa-id-card text-2xl mb-2"></i><span class="text-[10px]">點擊上傳 {{ info.visa.currentUser === 'user1' ? 'User 1' : 'User 2' }} 簽證</span></div>
+                                            <div v-else class="text-[#57534e] flex flex-col items-center"><i class="fa-solid fa-id-card text-2xl mb-2"></i><span class="text-[10px]">點擊上傳 {{ info.visa.currentUser === 'user1' ? 'HungJung Hsu' : 'ChiFen Tai' }} 簽證</span></div>
                                             <input type="file" id="visa-file" class="hidden" accept="image/*" @change="(e) => handleImageUpload(e, 'visa')">
                                         </div>
                                     </div>
@@ -2208,8 +2210,8 @@
                 const openHotelModal = () => { hotelForm.value = { ...info.value.hotel.list[info.value.hotel.currentIndex] }; showHotelModal.value = true; };
                 
                 // 同步修改 Hotel 的地圖搜尋 fallback (保持一致性)
-                const proceedToHotelMapConfirm = async () => {
-                   // 預設台北市座標
+                const proceedToHotelMapConfirm = async () => { 
+                    // 預設台北市座標
                     const DEFAULT_LAT = 25.0330;
                     const DEFAULT_LNG = 121.5654;
 
