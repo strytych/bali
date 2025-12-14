@@ -1371,7 +1371,10 @@
                 const chartLegendData = ref([]);
 
                 // TRIPS remain in LocalStorage as requested ("Except for trip page")
-                const defaultTrips = [{ id: 'bali', title: 'Bali Trip', displayDate: '2026-4/1 ~ 4/6', startDate: '2026-04-01', endDate: '2026-04-06', image: 'https://i.ibb.co/fdndWNk4/banner.jpg', timezone: 'Asia/Makassar' }];
+                const defaultTrips = [
+                    { id: 'bali', title: 'Bali Trip', displayDate: '2026-4/1 ~ 4/6', startDate: '2026-04-01', endDate: '2026-04-06', image: 'https://i.ibb.co/fdndWNk4/banner.jpg', timezone: 'Asia/Makassar' },
+                    { id: 'jeju', title: 'Jeju Trip', displayDate: '2026-1/1 ~ 1/4', startDate: '2026-01-01', endDate: '2026-01-04', image: 'https://images.unsplash.com/photo-1572455857811-045a528cc200?auto=format&fit=crop&w=800&q=80', timezone: 'Asia/Seoul' }
+                ];
                 const trips = ref(loadStorage('myTrip_trips', defaultTrips));
                 
                 const currentTrip = ref(trips.value[0]); 
