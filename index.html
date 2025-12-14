@@ -8,9 +8,6 @@
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- Vue.js 3 -->
-    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
-    
     <!-- SortableJS (用於拖曳排序) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
     
@@ -30,7 +27,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700;900&family=Great+Vibes&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
 
     <style>
-        /* --- 風格 & 深色模式設定 --- */
+        /* --- 史努比風格 & 深色模式設定 --- */
         body {
             background-color: #1c1917; 
             font-family: 'Zen Maru Gothic', sans-serif;
@@ -67,7 +64,7 @@
         /* 自定義地圖標記 */
         .custom-div-icon { background: transparent; border: none; }
         .marker-pin {
-            width: 32px; height: 32px; border-radius: 50%;
+            width: 32px; height: 32px; border-radius: 50%; 50%;
             background: #e7e5e4; border: 3px solid #1c1917;
             box-shadow: 0 4px 8px rgba(0,0,0,0.4);
             position: absolute; left: 50%; top: 50%;
@@ -128,6 +125,22 @@
         .calc-btn.operator { color: #fbbf24; }
         .calc-btn.equals { background-color: #fbbf24; color: #1c1917; border-color: #fbbf24; }
 
+        /* 浮現動畫 */
+        @keyframes fadeSlideIn {
+            from { opacity: 0; transform: translateX(-5px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        .animate-data-appear {
+            animation: fadeSlideIn 0.2s ease-out forwards;
+        }
+        
+        /* 隱藏 Input Number 的箭頭 */
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button { 
+            -webkit-appearance: none; 
+            margin: 0; 
+        }
+
         /* iOS Date Input Fix */
         input[type="date"] {
             -webkit-appearance: none;
@@ -144,7 +157,24 @@
         .hide-scroll::-webkit-scrollbar { display: none; }
         .hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }
         
-        /* 修改：確保日期 icon 在深色模式下變成黃色 */
+        /* Time Input Minimal Style */
+        .time-input-minimal {
+            background: transparent;
+            color: #e7e5e4;
+            font-family: 'Roboto Mono', monospace;
+            font-weight: bold;
+            font-size: 0.875rem;
+            border: none;
+            outline: none;
+            width: auto;
+            text-align: center;
+            cursor: pointer;
+        }
+        .time-input-minimal:focus {
+            color: #fbbf24;
+        }
+        
+        /* 修改：確保日期 icon 在深色模式下變成黃色 (保留給其他地方如 Modal 使用) */
         ::-webkit-calendar-picker-indicator {
             position: absolute;
             right: 12px;
@@ -165,7 +195,70 @@
             opacity: 1;
         }
 
-        /* 分離式時間輸入框樣式 */
+        /* 新增：專門給第一個行程使用的時間輸入框樣式，隱藏原生 icon */
+        .time-input-first {
+            background: transparent;
+            border: none;
+            outline: none;
+            text-align: center;
+            padding: 0;
+            margin: 4px 0;
+            width: 100%;
+            cursor: pointer;
+            /* 繼承父層字體設定，確保一致性 */
+            color: inherit;
+            font-family: inherit;
+            font-size: inherit;
+            font-weight: inherit;
+            letter-spacing: inherit;
+        }
+        
+        /* 隱藏 Chrome/Safari 的時間選擇器圖示 */
+        .time-input-first::-webkit-calendar-picker-indicator {
+            display: none !important;
+            -webkit-appearance: none;
+        }
+        
+        .time-input-first:focus {
+            color: #fbbf24;
+        }
+
+        /* 新增：乾淨的時間輸入框樣式 (用於 Modal) */
+        .time-input-clean {
+            background: #1c1917;
+            border: 1px solid #44403c;
+            color: #e7e5e4;
+            font-family: 'Roboto Mono', monospace;
+            font-weight: bold;
+            font-size: 2.5rem; /* 4xl */
+            border-radius: 0.75rem; /* rounded-xl */
+            padding: 0.5rem 0;
+            text-align: center;
+            outline: none;
+            width: 100%;
+            /* 移除預設外觀 */
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+        }
+        .time-input-clean:focus {
+            border-color: #fbbf24;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);
+        }
+        
+        /* 隱藏時間選擇器圖示 (時鐘/下拉) */
+        .time-input-clean::-webkit-calendar-picker-indicator {
+            display: none !important;
+            -webkit-appearance: none;
+        }
+        
+        /* 確保文字垂直置中 (針對部分瀏覽器) */
+        .time-input-clean::-webkit-date-and-time-value {
+             text-align: center; 
+             margin-top: 0;
+        }
+
+        /* 新增：分離式時間輸入框樣式 */
         .time-part-input {
             background: #1c1917;
             border: 1px solid #44403c;
@@ -178,6 +271,7 @@
             text-align: center;
             outline: none;
             width: 80px; /* 固定寬度容納2位數 */
+            /* 移除 input number 的箭頭 */
             -moz-appearance: textfield;
         }
         .time-part-input::-webkit-outer-spin-button,
@@ -194,18 +288,13 @@
 <body>
 
     <div id="app" class="mobile-container">
-        <!-- 載入中遮罩 -->
-        <div v-if="isLoading" class="absolute inset-0 bg-[#1c1917] z-[9999] flex flex-col items-center justify-center">
-            <i class="fa-solid fa-circle-notch fa-spin text-[#fbbf24] text-4xl mb-4"></i>
-            <span class="text-[#a8a29e] text-sm tracking-widest font-bold">LOADING DATA...</span>
-        </div>
-
+        
         <!-- ==================== 頁面 1: 首頁 (國家列表) ==================== -->
         <transition name="fade" mode="out-in">
             <div v-if="currentPage === 'home'" class="flex flex-col h-full relative" key="home">
                 <div class="h-8 w-full bg-[#1c1917] shrink-0"></div>
                 
-                <!-- 列表區域 -->
+                <!-- 列表區域 (獨立滾動) -->
                 <div id="trip-list" class="flex-1 overflow-y-auto hide-scroll px-6 pt-10 pb-24 space-y-6">
                     <div v-for="trip in trips" :key="trip.id" :data-id="trip.id" @click="openTrip(trip)" class="draggable-item relative h-48 rounded-[2rem] overflow-hidden group cursor-pointer shadow-lg border border-[#292524] active:scale-95 transition-transform duration-200">
                         <img :src="trip.image" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?auto=format&fit=crop&w=800&q=80';" class="absolute inset-0 w-full h-full object-cover opacity-70 group-hover:scale-105 transition-transform duration-500">
@@ -214,18 +303,19 @@
                             <h2 class="text-3xl text-[#e7e5e4] leading-none mb-1 drop-shadow-md tracking-wide" style="font-family: 'Great Vibes', cursive;">{{ trip.title }}</h2>
                             <p class="text-[10px] text-[#e7e5e4] font-bold tracking-wide opacity-90 drop-shadow-sm" style="font-family: 'Zen Maru Gothic', sans-serif;">({{ trip.displayDate }})</p>
                         </div>
+                        <!-- 加入 no-drag class 以及 .stop 修飾符防止事件冒泡影響拖曳 -->
                         <button @click.stop="openEditModal(trip)" @touchstart.stop class="no-drag absolute top-4 right-4 z-20 w-8 h-8 rounded-full flex items-center justify-center edit-icon-btn drop-shadow-md"><i class="fa-solid fa-ellipsis-vertical text-xs"></i></button>
                     </div>
                 </div>
 
-                <!-- 浮動按鈕 -->
+                <!-- 浮動按鈕 (黃色) -->
                 <button @click="openAddTripModal" class="absolute bottom-8 right-8 z-[100] w-12 h-12 rounded-full bg-[#fbbf24] border-2 border-[#fbbf24] text-[#1c1917] flex items-center justify-center shadow-[0_0_20px_rgba(251,191,36,0.3)] hover:scale-105 active:scale-95 transition-all duration-300"><i class="fa-solid fa-plus text-xl"></i></button>
             </div>
 
             <!-- ==================== 頁面 2: 行程詳情 ==================== -->
             <div v-else class="h-full relative flex flex-col" key="detail">
                 
-                <!-- 返回與標題層 -->
+                <!-- (Fixed) 返回與標題層 -->
                 <div class="absolute top-0 left-0 w-full z-[60] pointer-events-none p-4 flex justify-between items-start h-20 bg-gradient-to-b from-black/60 to-transparent">
                     <button @click="currentPage = 'home'" class="w-8 h-8 flex items-center justify-center text-white hover:text-[#fbbf24] transition drop-shadow-md pointer-events-auto"><i class="fa-solid fa-arrow-left text-lg"></i></button>
                     <div class="flex flex-col items-end pointer-events-none mt-1">
@@ -258,6 +348,8 @@
                             <div v-show="currentTab === 'itinerary'" class="h-full flex flex-col relative">
                                 <!-- 頂部資訊列 -->
                                 <div class="mx-6 mt-0 mb-2 p-3 rounded-3xl bg-[#292524]/80 border border-[#44403c] grid grid-cols-3 gap-2 items-stretch backdrop-blur-sm shadow-sm shrink-0">
+                                    
+                                    <!-- 1. 天氣與國家欄位 -->
                                     <div class="flex flex-col items-center justify-center border-r border-[#44403c]/50 pr-2">
                                         <div v-if="weatherLoading" class="flex flex-col items-center justify-center h-full gap-1">
                                             <i class="fa-solid fa-circle-notch fa-spin text-[#fbbf24] text-sm"></i>
@@ -274,6 +366,8 @@
                                             <span class="text-[10px] text-[#57534e]">No Data</span>
                                         </div>
                                     </div>
+
+                                    <!-- 2. 時間欄位 -->
                                     <div class="flex flex-col items-center justify-center border-r border-[#44403c]/50 px-1">
                                         <div class="flex items-center gap-1 mb-1">
                                             <span class="text-[8px] text-[#78716c] bg-[#1c1917] px-1 rounded border border-[#44403c]">TW</span>
@@ -285,6 +379,7 @@
                                             <span v-else class="text-xs text-[#fbbf24] font-mono font-bold">{{ currentTimeLocal }}</span>
                                         </div>
                                     </div>
+
                                     <div class="flex items-center gap-1">
                                         <button @click="switchView('list')" class="flex-1 h-full rounded-xl flex items-center justify-center transition-all duration-200 border" :class="currentView === 'list' ? 'bg-[#e7e5e4] text-[#1c1917] border-[#e7e5e4] shadow-md' : 'bg-transparent text-[#78716c] border-transparent hover:bg-[#44403c]/30'"><i class="fa-solid fa-list text-xs"></i></button>
                                         <button @click="switchView('map')" class="flex-1 h-full rounded-xl flex items-center justify-center transition-all duration-200 border" :class="currentView === 'map' ? 'bg-[#e7e5e4] text-[#1c1917] border-[#e7e5e4] shadow-md' : 'bg-transparent text-[#78716c] border-transparent hover:bg-[#44403c]/30'"><i class="fa-regular fa-map text-xs"></i></button>
@@ -306,38 +401,76 @@
                                 <!-- 列表區域 (連接線 + 卡片) -->
                                 <div v-if="currentView === 'list'" class="px-6 space-y-4">
                                     <div class="relative pl-0 space-y-6" id="itinerary-list">
+                                        <!-- Vertical Line Connector -->
                                         <div class="absolute left-[2.5rem] top-4 bottom-4 w-[2px] bg-[#44403c] z-0 rounded-full"></div>
+
                                         <div v-if="filteredItinerary.length === 0" class="text-center text-[#57534e] py-10 text-xs relative z-10">這天還沒有行程，按右下角新增！</div>
                                         
                                         <div v-for="(item, index) in filteredItinerary" :key="item.id" :data-id="item.id" class="relative group draggable-item z-10">
                                             <div class="bg-[#292524] rounded-3xl border border-[#1c1917] hover:border-[#44403c] transition-colors shadow-md group-hover:shadow-lg flex overflow-hidden relative">
+                                                <!-- Left Time/Icon Col -->
                                                 <div class="w-20 bg-[#23201f] flex flex-col items-center justify-center py-4 border-r border-[#44403c]/50 shrink-0 pointer-events-none relative z-10">
                                                     <div class="w-10 h-10 rounded-full flex items-center justify-center shadow-inner mb-2 border-2 border-[#1c1917]" :style="{ backgroundColor: getMarkerColor(item.type) }"><i :class="getCategoryIcon(item.type)" class="text-[#1c1917] text-sm"></i></div>
                                                     <div class="flex flex-col items-center gap-0.5 pointer-events-auto">
-                                                        <button v-if="index === 0" @click.stop="openTimeEditModal(item)" class="no-drag text-[#e7e5e4] text-lg font-bold font-mono tracking-wide leading-none my-1 hover:text-[#fbbf24] transition-colors outline-none bg-transparent border-0 p-0 cursor-pointer" title="點擊修改出發時間">{{ item.arrivalTime }}</button>
+                                                        
+                                                        <!-- 修改：第一個行程的時間顯示 -->
+                                                        <!-- 改用 button 顯示純文字，確保與下方 span 字體完全一致 -->
+                                                        <button v-if="index === 0" 
+                                                                @click.stop="openTimeEditModal(item)"
+                                                                class="no-drag text-[#e7e5e4] text-lg font-bold font-mono tracking-wide leading-none my-1 hover:text-[#fbbf24] transition-colors outline-none bg-transparent border-0 p-0 cursor-pointer"
+                                                                title="點擊修改出發時間">
+                                                            {{ item.arrivalTime }}
+                                                        </button>
+                                                               
+                                                        <!-- 如果不是第一個：顯示純文字 (自動計算) -->
                                                         <span v-else class="text-[#e7e5e4] text-lg font-bold font-mono tracking-wide leading-none my-1">{{ item.arrivalTime }}</span>
+                                                        
                                                         <span class="text-[9px] text-[#a8a29e] font-mono">{{ item.durationHr }}h{{ item.durationMin > 0 ? item.durationMin : '' }}</span>
                                                         <span class="text-[10px] font-bold text-[#78716c] font-mono leading-none mt-0.5">{{ getDepartureTime(item.arrivalTime, item.durationHr, item.durationMin) }}</span>
                                                     </div>
                                                 </div>
+                                                
+                                                <!-- Right Info Col -->
                                                 <div class="flex-1 p-4 flex flex-col justify-center relative min-w-0">
+                                                    <!-- Top Row: Title + Nav + Menu -->
                                                     <div class="flex items-center justify-between mb-2">
                                                         <div class="flex items-center gap-2 overflow-hidden flex-1">
                                                             <h3 class="text-lg font-bold text-[#e7e5e4] tracking-wide leading-tight truncate">{{ item.title }}</h3>
-                                                            <a :href="getMapUrl(item)" target="_blank" @click.stop class="no-drag w-6 h-6 rounded-full bg-[#fbbf24] text-[#1c1917] flex items-center justify-center hover:bg-white shadow-lg active:scale-90 shrink-0 transition-transform"><i class="fa-solid fa-location-arrow text-[10px]"></i></a>
+                                                            <!-- Nav Icon (no-drag) -->
+                                                            <!-- 修改：將 button 改為 a 標籤，href 直接綁定 Google Maps 連結 -->
+                                                            <a :href="getMapUrl(item)" target="_blank" @click.stop class="no-drag w-6 h-6 rounded-full bg-[#fbbf24] text-[#1c1917] flex items-center justify-center hover:bg-white shadow-lg active:scale-90 shrink-0 transition-transform">
+                                                                <i class="fa-solid fa-location-arrow text-[10px]"></i>
+                                                            </a>
                                                         </div>
+                                                        <!-- Menu (3 dots) (no-drag) -->
                                                         <div class="relative shrink-0 ml-1">
                                                             <button @click.stop="openEditItemModal(item)" @touchstart.stop class="no-drag w-8 h-8 rounded-full flex items-center justify-center text-[#78716c] hover:bg-[#44403c] transition"><i class="fa-solid fa-ellipsis-vertical text-xs"></i></button>
                                                         </div>
                                                     </div>
-                                                    <textarea v-model="item.notes" @input="autoResize($event.target)" @touchstart.stop class="no-drag w-full bg-[#1c1917]/50 rounded-xl border border-[#44403c]/30 p-2 text-base text-[#a8a29e] placeholder-[#57534e] outline-none focus:border-[#fbbf24] transition overflow-hidden auto-resize-textarea" rows="1" placeholder="備註..."></textarea>
+                                                    
+                                                    <!-- Notes (Editable Textarea) (no-drag implicitly mostly, but better add no-drag if conflict) -->
+                                                    <textarea 
+                                                        v-model="item.notes" 
+                                                        @input="autoResize($event.target)"
+                                                        @touchstart.stop
+                                                        class="no-drag w-full bg-[#1c1917]/50 rounded-xl border border-[#44403c]/30 p-2 text-base text-[#a8a29e] placeholder-[#57534e] outline-none focus:border-[#fbbf24] transition overflow-hidden auto-resize-textarea" 
+                                                        rows="1" 
+                                                        placeholder="備註..."></textarea>
                                                 </div>
                                             </div>
                                             
+                                            <!-- Travel Time Connector (Optional visual) -->
                                             <div v-if="index < filteredItinerary.length - 1" class="flex justify-center py-2 relative z-10">
+                                                <!-- 點擊此按鈕開啟交通時間編輯 Modal (no-drag) -->
                                                 <button @click.stop="openTravelTimeModal(item)" @touchstart.stop class="no-drag px-3 py-1 rounded-full bg-[#1c1917] text-[#a8a29e] text-[10px] font-bold shadow-md border border-[#44403c] flex items-center gap-2 hover:border-[#fbbf24] hover:text-[#fbbf24] transition-all z-20">
-                                                    <div @click.stop="toggleTravelMode(item)" @touchstart.stop class="flex items-center justify-center w-4 h-4 hover:text-white transition"><i :class="getTravelIcon(item.travelMode)" class="text-xs"></i></div>
+                                                    <!-- 顯示 icon (點擊切換交通工具) -->
+                                                    <div @click.stop="toggleTravelMode(item)" @touchstart.stop class="flex items-center justify-center w-4 h-4 hover:text-white transition">
+                                                        <i :class="getTravelIcon(item.travelMode)" class="text-xs"></i>
+                                                    </div>
+                                                    
+                                                    <!-- 顯示交通時間 (資料來自 item.calculatedTravelTime) -->
                                                     <span>{{ formatTravelTime(item.calculatedTravelTime) }}</span>
+                                                    
                                                     <i class="fa-solid fa-pen text-[8px] opacity-50 ml-1"></i>
                                                 </button>
                                             </div>
@@ -347,23 +480,38 @@
                             </div>
                         </transition>
 
+                        <!-- ... (Other Tabs remains same) ... -->
                         <!-- 資訊頁面 Tab -->
                         <div v-show="currentTab === 'info'" class="h-full flex flex-col relative overflow-hidden">
                             <div class="px-6 pt-6 pb-24 space-y-6">
                                 <div class="bg-[#292524] rounded-3xl p-5 border border-[#44403c] shadow-lg">
                                     <h3 class="text-[#fbbf24] font-bold mb-4 flex items-center gap-2 text-lg"><i class="fa-solid fa-plane-departure"></i> 航班資訊</h3>
+                                    
+                                    <!-- 合併後的航班資訊區塊 (Dynamic) -->
                                     <div class="bg-[#1c1917] p-4 rounded-2xl mb-4 border border-[#44403c] relative transition-all duration-300">
                                         <div class="flex justify-between items-center border-b border-[#44403c] pb-1 mb-2">
-                                            <div class="text-[10px] text-[#fbbf24] font-bold tracking-widest uppercase flex items-center gap-2"><span>{{ currentFlightType === 'out' ? '去程' : '回程' }}</span></div>
+                                            <div class="text-[10px] text-[#fbbf24] font-bold tracking-widest uppercase flex items-center gap-2">
+                                                <span>{{ currentFlightType === 'out' ? '去程' : '回程' }}</span>
+                                            </div>
                                             <div class="flex items-center gap-3">
-                                                <button @click="toggleFlightType" class="text-[10px] px-3 py-1 rounded-full bg-[#44403c] text-[#fbbf24] hover:bg-[#57534e] transition">{{ currentFlightType === 'out' ? '去程' : '回程' }} <i class="fa-solid fa-repeat ml-1"></i></button>
-                                                <button @click="openFlightModal(currentFlightType)" class="text-[#a8a29e] hover:text-white transition"><i class="fa-solid fa-gear text-xs"></i></button>
+                                                <button @click="toggleFlightType" class="text-[10px] px-3 py-1 rounded-full bg-[#44403c] text-[#fbbf24] hover:bg-[#57534e] transition">
+                                                    {{ currentFlightType === 'out' ? '去程' : '回程' }} <i class="fa-solid fa-repeat ml-1"></i>
+                                                </button>
+                                                <button @click="openFlightModal(currentFlightType)" class="text-[#a8a29e] hover:text-white transition">
+                                                    <i class="fa-solid fa-gear text-xs"></i>
+                                                </button>
                                             </div>
                                         </div>
+                                        
+                                        <!-- 資料顯示區 (回復中文標籤) -->
                                         <div class="grid grid-cols-2 gap-3 mb-2">
                                             <div>
                                                 <div class="info-label">航線</div>
-                                                <div class="text-[#e7e5e4] text-sm font-mono font-bold flex items-center gap-1"><span>{{ info.flight[currentFlightType].depAirport || '---' }}</span><i class="fa-solid fa-plane text-[10px] text-[#57534e]"></i><span>{{ info.flight[currentFlightType].arrAirport || '---' }}</span></div>
+                                                <div class="text-[#e7e5e4] text-sm font-mono font-bold flex items-center gap-1">
+                                                    <span>{{ info.flight[currentFlightType].depAirport || '---' }}</span>
+                                                    <i class="fa-solid fa-plane text-[10px] text-[#57534e]"></i>
+                                                    <span>{{ info.flight[currentFlightType].arrAirport || '---' }}</span>
+                                                </div>
                                             </div>
                                             <div>
                                                 <div class="info-label">航班編號</div>
@@ -387,6 +535,7 @@
                                         </div>
                                     </div>
                                 </div>
+                                <!-- Hotel Info -->
                                 <div class="bg-[#292524] rounded-3xl p-5 border border-[#44403c] shadow-lg relative">
                                     <div class="flex justify-between items-center mb-4">
                                         <h3 class="text-[#fbbf24] font-bold flex items-center gap-2 text-lg"><i class="fa-solid fa-hotel"></i> 住宿資訊</h3>
@@ -395,15 +544,29 @@
                                             <button @click="openHotelModal" class="text-[#a8a29e] hover:text-white transition relative z-10 p-2"><i class="fa-solid fa-gear"></i></button>
                                         </div>
                                     </div>
+                                    
                                     <div class="space-y-4">
-                                        <div><div class="info-label">飯店名稱 (Hotel Name)</div><div class="text-[#e7e5e4] text-base font-bold min-h-[1.5rem]">{{ info.hotel.list[info.hotel.currentIndex].name }}</div></div>
-                                        <div><div class="info-label">電話 (Phone)</div><div class="text-[#e7e5e4] text-sm min-h-[1.25rem]">{{ info.hotel.list[info.hotel.currentIndex].phone }}</div></div>
                                         <div>
-                                            <div class="flex items-center gap-2"><div class="info-label mb-0">住址 (Address)</div><a :href="getMapUrl(info.hotel.list[info.hotel.currentIndex])" target="_blank" class="w-5 h-5 rounded-full bg-[#fbbf24] text-[#1c1917] flex items-center justify-center hover:bg-[#f59e0b] shadow-md active:scale-90 transition shrink-0" title="導航"><i class="fa-solid fa-location-arrow text-[8px]"></i></a></div>
+                                            <div class="info-label">飯店名稱 (Hotel Name)</div>
+                                            <div class="text-[#e7e5e4] text-base font-bold min-h-[1.5rem]">{{ info.hotel.list[info.hotel.currentIndex].name }}</div>
+                                        </div>
+                                        <div>
+                                            <div class="info-label">電話 (Phone)</div>
+                                            <div class="text-[#e7e5e4] text-sm min-h-[1.25rem]">{{ info.hotel.list[info.hotel.currentIndex].phone }}</div>
+                                        </div>
+                                        <div>
+                                            <div class="flex items-center gap-2">
+                                                <div class="info-label mb-0">住址 (Address)</div>
+                                                <!-- 修改：住宿資訊的導航按鈕也改為 a 標籤 -->
+                                                <a :href="getMapUrl(info.hotel.list[info.hotel.currentIndex])" target="_blank" class="w-5 h-5 rounded-full bg-[#fbbf24] text-[#1c1917] flex items-center justify-center hover:bg-[#f59e0b] shadow-md active:scale-90 transition shrink-0" title="導航">
+                                                    <i class="fa-solid fa-location-arrow text-[8px]"></i>
+                                                </a>
+                                            </div>
                                             <div class="text-[#e7e5e4] text-sm min-h-[1.25rem] break-words">{{ info.hotel.list[info.hotel.currentIndex].address }}</div>
                                         </div>
                                     </div>
                                 </div>
+                                <!-- Visa -->
                                 <div class="bg-[#292524] rounded-3xl p-5 border border-[#44403c] shadow-lg">
                                     <div class="flex justify-between items-center mb-2">
                                         <h3 class="text-[#fbbf24] font-bold flex items-center gap-2 text-lg"><i class="fa-solid fa-passport"></i> 簽證資訊</h3>
@@ -418,6 +581,7 @@
                                     </div>
                                 </div>
                                 
+                                <!-- ★★★ Check List ★★★ -->
                                 <div class="bg-[#292524] rounded-3xl p-5 border border-[#44403c] shadow-lg">
                                     <h3 class="text-[#fbbf24] font-bold mb-4 flex items-center gap-2 text-lg"><i class="fa-solid fa-list-check"></i> Check List</h3>
                                     <div class="space-y-4">
@@ -435,7 +599,8 @@
                                                      @mousedown="startLongPress(category, idx)" @mouseup="clearLongPress" @mouseleave="clearLongPress"
                                                      @contextmenu.prevent
                                                 >
-                                                    <div class="w-4 h-4 rounded border flex items-center justify-center transition-colors" :class="item.checked ? 'bg-[#fbbf24] border-[#fbbf24]' : 'border-[#57534e]'">
+                                                    <div class="w-4 h-4 rounded border flex items-center justify-center transition-colors"
+                                                         :class="item.checked ? 'bg-[#fbbf24] border-[#fbbf24]' : 'border-[#57534e]'">
                                                         <i v-if="item.checked" class="fa-solid fa-check text-[#1c1917] text-[10px]"></i>
                                                     </div>
                                                     <span class="text-sm font-medium">{{ item.name }}</span>
@@ -447,9 +612,12 @@
                             </div>
                         </div>
 
-                        <!-- 花費頁面 Tab -->
+                        <!-- ★★★ (2) 花費頁面 Tab ★★★ -->
                         <div v-show="currentTab === 'expenses'" class="h-full flex flex-col relative">
+                            <!-- (略，保持不變) -->
+                            <!-- 頂部固定區域 (匯率 + 總覽 + 分類) -->
                             <div class="px-6 pt-6 shrink-0 bg-[#1c1917] z-20 pb-0 shadow-sm relative">
+                                 <!-- 匯率轉換器 -->
                                 <div class="bg-[#292524] rounded-2xl p-3 border border-[#44403c] mb-4 flex items-center justify-between gap-3 shadow-lg">
                                     <div class="flex-1 relative">
                                         <label class="absolute -top-2 left-2 text-[8px] bg-[#292524] px-1 text-white font-bold">{{ currency.code }}</label>
@@ -464,7 +632,9 @@
                                     </div>
                                 </div>
 
+                                <!-- 總花費卡片 -->
                                 <div class="bg-[#292524] rounded-3xl p-4 border border-[#44403c] shadow-lg mb-6 relative overflow-hidden flex items-center justify-between gap-2 transition-all hover:shadow-[0_4px_10px_rgba(0,0,0,0.5)]">
+                                    <!-- Left Section: Info & Toggles -->
                                     <div class="z-10 flex flex-col gap-2 shrink-0 mr-1 max-w-[45%]">
                                         <div :class="totalExpenseFontClass" class="font-bold font-mono text-[#e7e5e4] leading-none whitespace-nowrap">$ {{ totalExpensesTWD.toLocaleString() }}</div>
                                         <button @click="showCurrencyModal = true" class="flex items-center gap-1 text-[9px] font-bold text-[#a8a29e] w-fit cursor-pointer hover:text-[#fbbf24] transition">
@@ -475,31 +645,55 @@
                                              <button @click="chartType='payment'" class="text-[9px] px-2 py-0.5 rounded-full border border-[#44403c] font-bold transition-all" :class="chartType==='payment' ? 'bg-[#fbbf24] text-[#1c1917]' : 'bg-transparent text-[#a8a29e] hover:bg-[#44403c]'">付款方式</button>
                                         </div>
                                     </div>
+                                    
+                                    <!-- Right Section: Chart & Legend -->
                                     <div class="flex items-center gap-1 flex-1 justify-end min-w-0 pr-4"> 
-                                        <div class="relative z-10 w-16 h-16 shrink-0 flex items-center justify-center"><canvas id="expenseChart"></canvas></div>
+                                        <!-- Chart -->
+                                        <div class="relative z-10 w-16 h-16 shrink-0 flex items-center justify-center">
+                                             <canvas id="expenseChart"></canvas>
+                                        </div>
+                                        <!-- Legend -->
                                         <div class="flex flex-col justify-center items-start pl-2 z-10 h-20 overflow-y-auto no-scrollbar w-32">
                                             <div v-for="item in chartLegendData" :key="item.label" class="flex items-center justify-between w-full mb-1">
                                                 <div class="flex items-center gap-1.5 overflow-hidden min-w-0 flex-1 justify-start">
                                                     <div class="w-1.5 h-1.5 rounded-full shrink-0" :style="{backgroundColor: item.color}"></div>
                                                     <span class="text-[#a8a29e] truncate text-[9px] text-left">{{ item.label }}</span>
                                                 </div>
-                                                <div class="flex items-center shrink-0 ml-1"><span :class="getLegendValSize(item.value)" class="text-[#e7e5e4] font-mono leading-none">${{ item.value.toLocaleString() }}</span></div>
+                                                <div class="flex items-center shrink-0 ml-1">
+                                                    <span :class="getLegendValSize(item.value)" class="text-[#e7e5e4] font-mono leading-none">${{ item.value.toLocaleString() }}</span>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
+                                
+                                <!-- 3. 分類 Bar -->
                                 <div class="w-auto -mx-6 px-6 border-b border-[#292524] pb-2">
                                     <div class="grid grid-cols-7 gap-1 w-full">
-                                        <button v-for="cat in expenseCategories" :key="cat.key" @click="expenseFilter = cat.key" class="rounded-t-xl py-2 text-xs font-bold transition-all transform origin-bottom border-t border-l border-r border-[#44403c] px-0 flex items-center justify-center" :class="[expenseFilter === cat.key ? 'bg-[#fbbf24] text-[#1c1917] z-10 scale-110 shadow-md border-[#fbbf24]' : 'bg-[#292524] text-[#a8a29e] border-[#44403c] opacity-70 hover:opacity-100 hover:bg-[#44403c] scale-100']"><span class="truncate px-0.5">{{ cat.label }}</span></button>
+                                        <button v-for="cat in expenseCategories" :key="cat.key" 
+                                                @click="expenseFilter = cat.key"
+                                                class="rounded-t-xl py-2 text-xs font-bold transition-all transform origin-bottom border-t border-l border-r border-[#44403c] px-0 flex items-center justify-center"
+                                                :class="[
+                                                    expenseFilter === cat.key 
+                                                        ? 'bg-[#fbbf24] text-[#1c1917] z-10 scale-110 shadow-md border-[#fbbf24]' 
+                                                        : 'bg-[#292524] text-[#a8a29e] border-[#44403c] opacity-70 hover:opacity-100 hover:bg-[#44403c] scale-100'
+                                                ]">
+                                            <span class="truncate px-0.5">{{ cat.label }}</span>
+                                        </button>
                                     </div>
                                 </div>
                             </div>
 
+                            <!-- 滾動區域：列表 -->
                             <div class="px-6 pt-4 bg-[#1c1917] relative space-y-3">
+                                <!-- Overlay to close menu when clicking outside -->
                                 <div v-if="activeExpenseMenuId" @click="activeExpenseMenuId = null" class="fixed inset-0 z-30 bg-transparent"></div>
+
                                 <div v-for="exp in filteredExpensesList" :key="exp.id" class="bg-[#292524] p-4 rounded-2xl border border-[#44403c] flex justify-between items-center shadow-md relative z-10">
                                     <div class="flex items-center gap-3">
-                                        <div class="w-10 h-10 rounded-full bg-[#1c1917] flex items-center justify-center text-[#fbbf24] border border-[#44403c]"><i :class="getExpenseIcon(exp.category)"></i></div>
+                                        <div class="w-10 h-10 rounded-full bg-[#1c1917] flex items-center justify-center text-[#fbbf24] border border-[#44403c]">
+                                            <i :class="getExpenseIcon(exp.category)"></i>
+                                        </div>
                                         <div>
                                             <div class="text-sm font-bold text-[#e7e5e4]">{{ exp.title }}</div>
                                             <div class="text-[10px] text-[#a8a29e]">{{ exp.date }} · {{ exp.payment }}</div>
@@ -512,7 +706,9 @@
                                             <div class="text-[10px] text-[#78716c] font-mono">{{ currency.code }} {{ exp.amountForeign.toLocaleString() }}</div>
                                         </div>
                                         <div class="relative">
-                                            <button @click.stop="editExpense(exp)" class="w-6 h-6 flex items-center justify-center text-[#78716c] hover:text-[#e7e5e4] transition rounded-full hover:bg-[#44403c] bg-transparent"><i class="fa-solid fa-ellipsis-vertical text-xs"></i></button>
+                                            <button @click.stop="editExpense(exp)" class="w-6 h-6 flex items-center justify-center text-[#78716c] hover:text-[#e7e5e4] transition rounded-full hover:bg-[#44403c] bg-transparent">
+                                                <i class="fa-solid fa-ellipsis-vertical text-xs"></i>
+                                            </button>
                                         </div>
                                     </div>
                                 </div>
@@ -523,10 +719,17 @@
                     </main>
                 </div>
 
-                <!-- 浮動按鈕區 -->
+                <!-- 浮動按鈕區 (固定在螢幕右下角) -->
                 <div class="absolute bottom-6 right-6 z-[100] flex flex-col gap-4 pointer-events-none">
-                    <button v-if="currentTab === 'itinerary' && currentView === 'list'" @click="openAddItineraryModal" class="w-12 h-12 rounded-full bg-[#fbbf24] border-2 border-[#fbbf24] text-[#1c1917] flex items-center justify-center shadow-[0_0_20px_rgba(251,191,36,0.3)] hover:scale-105 active:scale-95 transition-all duration-300 pointer-events-auto"><i class="fa-solid fa-plus text-lg"></i></button>
-                    <button v-if="currentTab === 'expenses'" @click="openAddExpenseModal" class="w-12 h-12 rounded-full bg-[#fbbf24] text-[#1c1917] flex items-center justify-center shadow-lg hover:scale-110 active:scale-95 transition border border-[#fbbf24] pointer-events-auto"><i class="fa-solid fa-plus text-xl"></i></button>
+                     <!-- 行程頁面 FAB (已更換為黃色) -->
+                    <button v-if="currentTab === 'itinerary' && currentView === 'list'" @click="openAddItineraryModal" class="w-12 h-12 rounded-full bg-[#fbbf24] border-2 border-[#fbbf24] text-[#1c1917] flex items-center justify-center shadow-[0_0_20px_rgba(251,191,36,0.3)] hover:scale-105 active:scale-95 transition-all duration-300 pointer-events-auto">
+                        <i class="fa-solid fa-plus text-lg"></i>
+                    </button>
+
+                    <!-- 消費頁面 FAB -->
+                    <button v-if="currentTab === 'expenses'" @click="openAddExpenseModal" class="w-12 h-12 rounded-full bg-[#fbbf24] text-[#1c1917] flex items-center justify-center shadow-lg hover:scale-110 active:scale-95 transition border border-[#fbbf24] pointer-events-auto">
+                        <i class="fa-solid fa-plus text-xl"></i>
+                    </button>
                 </div>
 
             </div>
@@ -534,51 +737,95 @@
 
         <!-- Modals -->
         <transition name="modal"><div v-if="showCurrencyModal" class="fixed inset-0 z-[200] flex items-center justify-center pointer-events-none"><div class="absolute inset-0 bg-black/80 pointer-events-auto" @click="showCurrencyModal = false"></div><div class="relative bg-[#292524] w-72 p-6 rounded-3xl border border-[#44403c] pointer-events-auto shadow-2xl"><div class="grid grid-cols-2 gap-3"><button v-for="(rate, code) in exchangeRates" :key="code" @click="selectCurrency(code)" class="p-3 rounded-xl border flex flex-col items-center gap-1 transition active:scale-95" :class="currency.code === code ? 'bg-[#fbbf24] border-[#fbbf24] text-[#1c1917]' : 'bg-[#1c1917] border-[#44403c] text-[#a8a29e]'"><span class="font-bold text-lg">{{ code }}</span><span class="text-[10px]">1 {{ code }} ≈ {{ rate.toFixed(4) }} TWD</span></button></div></div></div></transition>
-        <!-- ... (Keep all existing Modals exactly as they are) ... -->
         
-        <!-- Travel Time Edit Modal -->
+        <!-- Travel Time Edit Modal (New) -->
         <transition name="modal">
             <div v-if="showTravelTimeModal" class="fixed inset-0 z-[200] flex items-center justify-center pointer-events-none">
                 <div @click="showTravelTimeModal = false" class="absolute inset-0 bg-black/60 backdrop-blur-sm pointer-events-auto transition-opacity duration-300"></div>
                 <div class="relative bg-[#292524] w-80 p-6 rounded-3xl border border-[#44403c] pointer-events-auto shadow-2xl">
-                    <div class="text-center mb-4"><h3 class="text-[#fbbf24] font-bold text-sm">編輯交通方式與時間</h3><p class="text-[10px] text-[#a8a29e] mt-1">前往下個地點的設定</p></div>
-                    <div class="flex justify-center gap-4 mb-6">
-                        <button v-for="mode in ['car', 'bus', 'walking']" :key="mode" @click="travelTimeForm.mode = mode" class="w-12 h-12 rounded-full flex items-center justify-center border transition-all duration-200" :class="travelTimeForm.mode === mode ? 'bg-[#fbbf24] border-[#fbbf24] text-[#1c1917] scale-110 shadow-lg' : 'bg-[#1c1917] border-[#44403c] text-[#78716c] hover:border-[#a8a29e]'"><i :class="[getTravelIcon(mode), 'text-lg']"></i></button>
+                    <div class="text-center mb-4">
+                        <h3 class="text-[#fbbf24] font-bold text-sm">編輯交通方式與時間</h3>
+                        <p class="text-[10px] text-[#a8a29e] mt-1">前往下個地點的設定</p>
                     </div>
+
+                    <!-- 1. 交通方式選擇 (新增) -->
+                    <div class="flex justify-center gap-4 mb-6">
+                        <button v-for="mode in ['car', 'bus', 'walking']" :key="mode" 
+                                @click="travelTimeForm.mode = mode"
+                                class="w-12 h-12 rounded-full flex items-center justify-center border transition-all duration-200"
+                                :class="travelTimeForm.mode === mode ? 'bg-[#fbbf24] border-[#fbbf24] text-[#1c1917] scale-110 shadow-lg' : 'bg-[#1c1917] border-[#44403c] text-[#78716c] hover:border-[#a8a29e]'">
+                            <i :class="[getTravelIcon(mode), 'text-lg']"></i>
+                        </button>
+                    </div>
+                    
                     <div class="space-y-3">
+                        <!-- 自動計算選項 -->
                         <button @click="setTravelMode('auto')" class="w-full p-3 rounded-xl border flex items-center justify-between transition" :class="travelTimeForm.type === 'auto' ? 'bg-[#fbbf24]/10 border-[#fbbf24] text-[#fbbf24]' : 'bg-[#1c1917] border-[#44403c] text-[#a8a29e]'">
-                            <div class="flex flex-col items-start"><span class="text-xs font-bold flex items-center gap-2"><i class="fa-solid fa-wand-magic-sparkles"></i> 自動計算</span><span class="text-[9px] opacity-70 mt-0.5" v-if="travelTimeForm.type === 'auto'">將依照 {{ getModeName(travelTimeForm.mode) }} 重新估算</span></div>
+                            <div class="flex flex-col items-start">
+                                <span class="text-xs font-bold flex items-center gap-2"><i class="fa-solid fa-wand-magic-sparkles"></i> 自動計算</span>
+                                <span class="text-[9px] opacity-70 mt-0.5" v-if="travelTimeForm.type === 'auto'">將依照 {{ getModeName(travelTimeForm.mode) }} 重新估算</span>
+                            </div>
                             <span v-if="travelTimeForm.type === 'auto'" class="text-[10px]"><i class="fa-solid fa-check"></i></span>
                         </button>
+                        
+                        <!-- 手動輸入選項 -->
                         <button @click="setTravelMode('manual')" class="w-full p-3 rounded-xl border flex flex-col items-start gap-2 transition" :class="travelTimeForm.type === 'manual' ? 'bg-[#fbbf24]/10 border-[#fbbf24] text-[#fbbf24]' : 'bg-[#1c1917] border-[#44403c] text-[#a8a29e]'">
-                            <div class="w-full flex justify-between items-center"><span class="text-xs font-bold flex items-center gap-2"><i class="fa-regular fa-keyboard"></i> 手動輸入</span><span v-if="travelTimeForm.type === 'manual'" class="text-[10px]"><i class="fa-solid fa-check"></i></span></div>
+                            <div class="w-full flex justify-between items-center">
+                                <span class="text-xs font-bold flex items-center gap-2"><i class="fa-regular fa-keyboard"></i> 手動輸入</span>
+                                <span v-if="travelTimeForm.type === 'manual'" class="text-[10px]"><i class="fa-solid fa-check"></i></span>
+                            </div>
+                            
+                            <!-- 修改：手動輸入欄位 (小時 + 分鐘) -->
                             <div v-if="travelTimeForm.type === 'manual'" class="w-full flex items-center justify-center gap-3 mt-2" @click.stop>
-                                <div class="flex items-center gap-1"><input v-model.number="travelTimeForm.hours" type="number" min="0" class="w-14 bg-[#1c1917] border border-[#44403c] rounded-lg px-2 py-1 text-center text-[#e7e5e4] text-base font-mono focus:border-[#fbbf24] outline-none"><span class="text-[10px] text-[#a8a29e]">小時</span></div>
-                                <div class="flex items-center gap-1"><input v-model.number="travelTimeForm.minutes" type="number" min="0" max="59" class="w-14 bg-[#1c1917] border border-[#44403c] rounded-lg px-2 py-1 text-center text-[#e7e5e4] text-base font-mono focus:border-[#fbbf24] outline-none"><span class="text-[10px] text-[#a8a29e]">分鐘</span></div>
+                                <div class="flex items-center gap-1">
+                                    <input v-model.number="travelTimeForm.hours" type="number" min="0" class="w-14 bg-[#1c1917] border border-[#44403c] rounded-lg px-2 py-1 text-center text-[#e7e5e4] text-base font-mono focus:border-[#fbbf24] outline-none">
+                                    <span class="text-[10px] text-[#a8a29e]">小時</span>
+                                </div>
+                                <div class="flex items-center gap-1">
+                                    <input v-model.number="travelTimeForm.minutes" type="number" min="0" max="59" class="w-14 bg-[#1c1917] border border-[#44403c] rounded-lg px-2 py-1 text-center text-[#e7e5e4] text-base font-mono focus:border-[#fbbf24] outline-none">
+                                    <span class="text-[10px] text-[#a8a29e]">分鐘</span>
+                                </div>
                             </div>
                         </button>
                     </div>
+                    
                     <button @click="saveTravelTime" class="w-full mt-6 bg-[#fbbf24] text-[#1c1917] font-bold py-3 rounded-xl shadow-lg active:scale-95 transition">確定修改</button>
                 </div>
             </div>
         </transition>
 
-        <!-- Start Time Edit Modal -->
+        <!-- New: Start Time Edit Modal -->
         <transition name="modal">
             <div v-if="showTimeEditModal" class="fixed inset-0 z-[200] flex items-center justify-center pointer-events-none">
                 <div @click="showTimeEditModal = false" class="absolute inset-0 bg-black/60 backdrop-blur-sm pointer-events-auto transition-opacity duration-300"></div>
+                <!-- 修改：寬度改為 w-64，padding 改為 p-5，移除標題，讓畫面更簡潔 -->
                 <div class="relative bg-[#292524] w-auto p-6 rounded-3xl border border-[#44403c] pointer-events-auto shadow-2xl flex flex-col gap-5 items-center">
+                    
+                    <!-- 修改：改為分離式輸入框 (小時 : 分鐘) -->
                     <div class="flex items-center gap-2">
-                        <div class="flex flex-col items-center"><input v-model="editingHours" @input="validateTimeInput('hour')" type="number" min="0" max="23" class="time-part-input" placeholder="09" @focus="$event.target.select()"><span class="text-[10px] text-[#a8a29e] mt-1 font-bold tracking-wider">HOUR</span></div>
+                        <div class="flex flex-col items-center">
+                            <!-- 修改：加入 @input="validateTimeInput('hour')" 進行防呆 -->
+                            <input v-model="editingHours" @input="validateTimeInput('hour')" type="number" min="0" max="23" class="time-part-input" placeholder="09" @focus="$event.target.select()">
+                            <span class="text-[10px] text-[#a8a29e] mt-1 font-bold tracking-wider">HOUR</span>
+                        </div>
+                        
                         <span class="text-3xl font-bold text-[#57534e] pb-4">:</span>
-                        <div class="flex flex-col items-center"><input v-model="editingMinutes" @input="validateTimeInput('minute')" type="number" min="0" max="59" class="time-part-input" placeholder="00" @focus="$event.target.select()"><span class="text-[10px] text-[#a8a29e] mt-1 font-bold tracking-wider">MIN</span></div>
+                        
+                        <div class="flex flex-col items-center">
+                            <!-- 修改：加入 @input="validateTimeInput('minute')" 進行防呆 -->
+                            <input v-model="editingMinutes" @input="validateTimeInput('minute')" type="number" min="0" max="59" class="time-part-input" placeholder="00" @focus="$event.target.select()">
+                            <span class="text-[10px] text-[#a8a29e] mt-1 font-bold tracking-wider">MIN</span>
+                        </div>
                     </div>
-                    <button @click="saveTime" class="w-full bg-[#fbbf24] text-[#1c1917] font-bold py-3 rounded-xl shadow-lg active:scale-95 transition border-b-[4px] border-[#b45309] active:border-b-0 active:translate-y-[4px]">確定</button>
+                    
+                    <button @click="saveTime" class="w-full bg-[#fbbf24] text-[#1c1917] font-bold py-3 rounded-xl shadow-lg active:scale-95 transition border-b-[4px] border-[#b45309] active:border-b-0 active:translate-y-[4px]">
+                        確定
+                    </button>
                 </div>
             </div>
         </transition>
 
-        <!-- Expense Modal -->
+        <!-- Expense Modal (略，保持不變) -->
         <transition name="modal">
             <div v-if="showExpenseModal" class="fixed inset-0 z-[200] flex items-center justify-center pointer-events-none">
                 <div @click="showExpenseModal = false" class="absolute inset-0 bg-black/60 backdrop-blur-sm pointer-events-auto transition-opacity duration-300"></div>
@@ -602,22 +849,37 @@
             </div>
         </transition>
 
-        <!-- Flight Edit Modal -->
+        <!-- Flight Edit Modal (Updated) -->
         <transition name="modal">
             <div v-if="showFlightModal" class="fixed inset-0 z-[200] flex items-center justify-center pointer-events-none">
                 <div @click="showFlightModal = false" class="absolute inset-0 bg-black/60 backdrop-blur-sm pointer-events-auto transition-opacity duration-300"></div>
                 <div class="modal-content relative bg-[#292524] w-full max-w-sm mx-4 rounded-3xl p-6 shadow-2xl border border-[#44403c] pointer-events-auto transform transition-all duration-300">
                     <button @click="showFlightModal = false" class="absolute top-4 right-4 text-[#78716c] hover:text-[#e7e5e4] transition z-10"><i class="fa-solid fa-xmark text-lg"></i></button>
+                    <!-- 修改：移除頂部空白 -->
                     <div class="space-y-4 mt-8">
                         <div class="flex gap-3">
                             <div class="w-1/2"><label class="text-xs text-[#a8a29e] font-bold tracking-widest block mb-1">出發機場</label><input v-model="flightForm.depAirport" type="text" class="w-full bg-[#1c1917] border border-[#44403c] rounded-xl px-3 py-2 text-[#e7e5e4] focus:outline-none focus:border-[#fbbf24] transition placeholder-[#57534e]" placeholder="例如: TPE"></div>
                             <div class="w-1/2"><label class="text-xs text-[#a8a29e] font-bold tracking-widest block mb-1">抵達機場</label><input v-model="flightForm.arrAirport" type="text" class="w-full bg-[#1c1917] border border-[#44403c] rounded-xl px-3 py-2 text-[#e7e5e4] focus:outline-none focus:border-[#fbbf24] transition placeholder-[#57534e]" placeholder="例如: NRT"></div>
                         </div>
                         <div><label class="text-xs text-[#a8a29e] font-bold tracking-widest block mb-1">航班編號</label><input v-model="flightForm.number" type="text" class="w-full bg-[#1c1917] border border-[#44403c] rounded-xl px-3 py-2 text-[#e7e5e4] focus:outline-none focus:border-[#fbbf24] transition placeholder-[#57534e]" placeholder="例如: CI 100"></div>
+                        
                         <div class="flex gap-2">
-                            <div class="w-[50%]"><label class="text-xs text-[#a8a29e] font-bold tracking-widest block mb-1">出發時間</label><input v-model="flightForm.depTime" type="text" placeholder="例如: 10:30" class="w-full bg-[#1c1917] border border-[#44403c] rounded-xl px-3 py-2 text-[#e7e5e4] text-center text-sm outline-none focus:border-[#fbbf24] placeholder-[#57534e]"></div>
-                            <div class="w-[40%]"><label class="text-xs text-[#a8a29e] font-bold tracking-widest block mb-1">抵達時間</label><input v-model="flightForm.arrTime" type="text" placeholder="例如: 14:30" class="w-full bg-[#1c1917] border border-[#44403c] rounded-xl px-3 py-2 text-[#e7e5e4] text-center text-sm outline-none focus:border-[#fbbf24] placeholder-[#57534e]"></div>
-                            <div class="w-[10%]"><label class="text-xs text-[#a8a29e] font-bold tracking-widest block mb-1">&nbsp;</label><select v-model="flightForm.arrDayOffset" class="w-full bg-[#1c1917] border border-[#44403c] rounded-xl px-0 py-2 text-[#fbbf24] text-xs outline-none focus:border-[#fbbf24] text-center font-bold h-[38px]"><option :value="0">+0</option><option :value="1">+1</option><option :value="2">+2</option></select></div>
+                            <div class="w-[50%]">
+                                <label class="text-xs text-[#a8a29e] font-bold tracking-widest block mb-1">出發時間</label>
+                                <input v-model="flightForm.depTime" type="text" placeholder="例如: 10:30" class="w-full bg-[#1c1917] border border-[#44403c] rounded-xl px-3 py-2 text-[#e7e5e4] text-center text-sm outline-none focus:border-[#fbbf24] placeholder-[#57534e]">
+                            </div>
+                            <div class="w-[40%]">
+                                <label class="text-xs text-[#a8a29e] font-bold tracking-widest block mb-1">抵達時間</label>
+                                <input v-model="flightForm.arrTime" type="text" placeholder="例如: 14:30" class="w-full bg-[#1c1917] border border-[#44403c] rounded-xl px-3 py-2 text-[#e7e5e4] text-center text-sm outline-none focus:border-[#fbbf24] placeholder-[#57534e]">
+                            </div>
+                            <div class="w-[10%]">
+                                <label class="text-xs text-[#a8a29e] font-bold tracking-widest block mb-1">&nbsp;</label>
+                                <select v-model="flightForm.arrDayOffset" class="w-full bg-[#1c1917] border border-[#44403c] rounded-xl px-0 py-2 text-[#fbbf24] text-xs outline-none focus:border-[#fbbf24] text-center font-bold h-[38px]">
+                                    <option :value="0">+0</option>
+                                    <option :value="1">+1</option>
+                                    <option :value="2">+2</option>
+                                </select>
+                            </div>
                         </div>
                     </div>
                     <button @click="saveFlight" class="w-full bg-[#fbbf24] border-b-[6px] border-[#b45309] text-[#1c1917] font-bold py-3 rounded-xl mt-6 hover:bg-[#f59e0b] active:border-b-0 active:translate-y-[6px] active:shadow-none transition-all shadow-lg flex items-center justify-center gap-2"><i v-if="isCalculatingFlight" class="fa-solid fa-spinner fa-spin"></i><span>{{ isCalculatingFlight ? '計算中...' : '儲存資訊' }}</span></button>
@@ -631,12 +893,26 @@
                 <div @click="showHotelModal = false" class="absolute inset-0 bg-black/60 backdrop-blur-sm pointer-events-auto transition-opacity duration-300"></div>
                 <div class="modal-content relative bg-[#292524] w-full max-w-sm mx-4 rounded-3xl p-6 shadow-2xl border border-[#44403c] pointer-events-auto transform transition-all duration-300">
                     <button @click="showHotelModal = false" class="absolute top-4 right-4 text-[#78716c] hover:text-[#e7e5e4] transition z-10"><i class="fa-solid fa-xmark text-lg"></i></button>
+                    <!-- 修改：移除頂部空白 -->
                     <div class="space-y-4 mt-8">
-                        <div><label class="text-xs text-[#a8a29e] font-bold tracking-widest block mb-1">飯店名稱 (Hotel Name)</label><input v-model="hotelForm.name" type="text" class="w-full bg-[#1c1917] border border-[#44403c] rounded-xl px-3 py-2 text-[#e7e5e4] focus:outline-none focus:border-[#fbbf24] transition placeholder-[#57534e]" placeholder="輸入飯店名稱"></div>
-                        <div><label class="text-xs text-[#a8a29e] font-bold tracking-widest block mb-1">電話 (Phone)</label><input v-model="hotelForm.phone" type="text" class="w-full bg-[#1c1917] border border-[#44403c] rounded-xl px-3 py-2 text-[#e7e5e4] focus:outline-none focus:border-[#fbbf24] transition placeholder-[#57534e]" placeholder="輸入電話"></div>
-                        <div><label class="text-xs text-[#a8a29e] font-bold tracking-widest block mb-1">住址 (Address)</label><textarea v-model="hotelForm.address" rows="2" class="w-full bg-[#1c1917] border border-[#44403c] rounded-xl px-3 py-2 text-[#e7e5e4] focus:outline-none focus:border-[#fbbf24] transition placeholder-[#57534e]" placeholder="輸入地址"></textarea></div>
+                        <div>
+                            <label class="text-xs text-[#a8a29e] font-bold tracking-widest block mb-1">飯店名稱 (Hotel Name)</label>
+                            <input v-model="hotelForm.name" type="text" class="w-full bg-[#1c1917] border border-[#44403c] rounded-xl px-3 py-2 text-[#e7e5e4] focus:outline-none focus:border-[#fbbf24] transition placeholder-[#57534e]" placeholder="輸入飯店名稱">
+                        </div>
+                        <div>
+                            <label class="text-xs text-[#a8a29e] font-bold tracking-widest block mb-1">電話 (Phone)</label>
+                            <input v-model="hotelForm.phone" type="text" class="w-full bg-[#1c1917] border border-[#44403c] rounded-xl px-3 py-2 text-[#e7e5e4] focus:outline-none focus:border-[#fbbf24] transition placeholder-[#57534e]" placeholder="輸入電話">
+                        </div>
+                        <div>
+                            <label class="text-xs text-[#a8a29e] font-bold tracking-widest block mb-1">住址 (Address)</label>
+                            <textarea v-model="hotelForm.address" rows="2" class="w-full bg-[#1c1917] border border-[#44403c] rounded-xl px-3 py-2 text-[#e7e5e4] focus:outline-none focus:border-[#fbbf24] transition placeholder-[#57534e]" placeholder="輸入地址"></textarea>
+                        </div>
                     </div>
-                    <button @click="proceedToHotelMapConfirm" class="w-full bg-[#fbbf24] border-b-[6px] border-[#b45309] text-[#1c1917] font-bold py-3 rounded-xl mt-6 hover:bg-[#f59e0b] active:border-b-0 active:translate-y-[6px] active:shadow-none transition-all shadow-lg flex items-center justify-center gap-2"><i class="fa-solid fa-map-location-dot"></i><span>下一步：定位確認</span></button>
+                    
+                    <button @click="proceedToHotelMapConfirm" class="w-full bg-[#fbbf24] border-b-[6px] border-[#b45309] text-[#1c1917] font-bold py-3 rounded-xl mt-6 hover:bg-[#f59e0b] active:border-b-0 active:translate-y-[6px] active:shadow-none transition-all shadow-lg flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-map-location-dot"></i>
+                        <span>下一步：定位確認</span>
+                    </button>
                 </div>
             </div>
         </transition>
@@ -647,11 +923,21 @@
                 <div class="absolute inset-0 bg-black/80 backdrop-blur-sm pointer-events-auto"></div>
                 <div class="relative bg-[#1c1917] w-full h-full sm:max-w-md sm:h-[80vh] sm:rounded-3xl shadow-2xl flex flex-col pointer-events-auto overflow-hidden border border-[#44403c]">
                     <div class="absolute top-4 left-4 right-4 z-[1000] flex justify-between items-start pointer-events-none">
-                        <div class="bg-[#292524]/90 backdrop-blur px-4 py-2 rounded-xl border border-[#44403c] shadow-lg pointer-events-auto"><h3 class="text-[#fbbf24] font-bold text-sm">確認飯店位置</h3><p class="text-[10px] text-[#a8a29e]">移動圖釘以修正位置</p></div>
+                        <div class="bg-[#292524]/90 backdrop-blur px-4 py-2 rounded-xl border border-[#44403c] shadow-lg pointer-events-auto">
+                            <h3 class="text-[#fbbf24] font-bold text-sm">確認飯店位置</h3>
+                            <p class="text-[10px] text-[#a8a29e]">移動圖釘以修正位置</p>
+                        </div>
                         <button @click="showHotelMapModal = false; showHotelModal = true" class="w-10 h-10 rounded-full bg-[#292524] text-[#e7e5e4] flex items-center justify-center shadow-lg border border-[#44403c] pointer-events-auto"><i class="fa-solid fa-arrow-left"></i></button>
                     </div>
+                    
                     <div id="hotel-confirm-map" class="flex-1 w-full bg-[#292524] relative z-0"></div>
-                    <div class="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/90 to-transparent z-[1001] pointer-events-none flex justify-center pb-8"><button @click="confirmHotelLocation" class="w-full max-w-sm bg-[#fbbf24] border-b-[6px] border-[#b45309] text-[#1c1917] font-bold py-4 rounded-xl shadow-[0_0_20px_rgba(251,191,36,0.4)] active:border-b-0 active:translate-y-[6px] transition-all pointer-events-auto mx-4">確認位置並儲存</button></div>
+                    
+                    <!-- Fixed Bottom Confirm Button (Ensures Visibility) -->
+                    <div class="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/90 to-transparent z-[1001] pointer-events-none flex justify-center pb-8">
+                        <button @click="confirmHotelLocation" class="w-full max-w-sm bg-[#fbbf24] border-b-[6px] border-[#b45309] text-[#1c1917] font-bold py-4 rounded-xl shadow-[0_0_20px_rgba(251,191,36,0.4)] active:border-b-0 active:translate-y-[6px] transition-all pointer-events-auto mx-4">
+                            確認位置並儲存
+                        </button>
+                    </div>
                 </div>
             </div>
         </transition>
@@ -662,10 +948,13 @@
                 <div @click="showAddChecklistModal = false" class="absolute inset-0 bg-black/60 backdrop-blur-sm pointer-events-auto transition-opacity duration-300"></div>
                 <div class="relative bg-[#292524] w-full max-w-xs mx-4 rounded-3xl p-6 shadow-2xl border border-[#44403c] text-center pointer-events-auto transform transition-all duration-300 scale-100">
                     <button @click="showAddChecklistModal = false" class="absolute top-4 right-4 text-[#78716c] hover:text-[#e7e5e4] transition z-10"><i class="fa-solid fa-xmark text-lg"></i></button>
+                    <!-- 修改：移除頂部空白 -->
                     <div class="h-4"></div>
                     <label class="text-xs text-[#a8a29e] font-bold tracking-widest block mb-1 text-left">Item</label>
                     <input v-model="newChecklistItemName" type="text" class="w-full bg-[#1c1917] border border-[#44403c] rounded-xl px-4 py-3 text-[#e7e5e4] placeholder-[#57534e] focus:outline-none focus:border-[#fbbf24] transition mb-6" placeholder="輸入項目名稱...">
-                    <div class="flex gap-3 justify-center"><button @click="confirmAddChecklistItem" class="px-6 py-2 rounded-xl bg-[#fbbf24] text-[#1c1917] border border-[#b45309] text-sm font-bold shadow-lg hover:bg-[#f59e0b] transition w-full">新增</button></div>
+                    <div class="flex gap-3 justify-center">
+                        <button @click="confirmAddChecklistItem" class="px-6 py-2 rounded-xl bg-[#fbbf24] text-[#1c1917] border border-[#b45309] text-sm font-bold shadow-lg hover:bg-[#f59e0b] transition w-full">新增</button>
+                    </div>
                 </div>
             </div>
         </transition>
@@ -678,21 +967,38 @@
                 <div @click="showAddTripModal = false" class="absolute inset-0 bg-black/60 backdrop-blur-sm pointer-events-auto transition-opacity duration-300"></div>
                 <div class="modal-content relative bg-[#292524] w-full max-w-sm mx-4 sm:mb-0 mb-6 rounded-3xl p-6 shadow-2xl border border-[#44403c] pointer-events-auto transform transition-all duration-300">
                     <div class="flex justify-end items-center mb-0"><button @click="showAddTripModal = false" class="text-[#78716c] hover:text-[#e7e5e4] transition"><i class="fa-solid fa-xmark text-lg"></i></button></div>
+                    <!-- 修改：移除頂部空白 -->
                     <div class="space-y-4">
                         <div><label class="text-xs text-[#a8a29e] font-bold tracking-widest block mb-2">Title</label><input v-model="newTrip.title" type="text" placeholder="例如: Tokyo Trip" class="w-full bg-[#1c1917] border border-[#44403c] rounded-xl px-4 py-3 text-[#e7e5e4] placeholder-[#57534e] focus:outline-none focus:border-[#fbbf24] transition"></div>
                         <div class="flex gap-3">
-                            <div class="w-1/2"><label class="text-xs text-[#a8a29e] font-bold tracking-widest block mb-2">Start Date</label><input v-model="newTrip.start" type="date" onkeydown="return false" class="w-full bg-[#1c1917] border border-[#44403c] rounded-xl px-3 py-3 focus:outline-none focus:border-[#fbbf24] transition text-xs cursor-pointer caret-transparent" :class="newTrip.start ? 'text-[#e7e5e4]' : 'text-transparent'"></div>
-                            <div class="w-1/2"><label class="text-xs text-[#a8a29e] font-bold tracking-widest block mb-2">End Date</label><input v-model="newTrip.end" type="date" onkeydown="return false" class="w-full bg-[#1c1917] border border-[#44403c] rounded-xl px-3 py-3 focus:outline-none focus:border-[#fbbf24] transition text-xs cursor-pointer caret-transparent" :class="newTrip.end ? 'text-[#e7e5e4]' : 'text-transparent'"></div>
+                            <div class="w-1/2">
+                                <label class="text-xs text-[#a8a29e] font-bold tracking-widest block mb-2">Start Date</label>
+                                <input v-model="newTrip.start" type="date" onkeydown="return false" 
+                                       class="w-full bg-[#1c1917] border border-[#44403c] rounded-xl px-3 py-3 focus:outline-none focus:border-[#fbbf24] transition text-xs cursor-pointer caret-transparent"
+                                       :class="newTrip.start ? 'text-[#e7e5e4]' : 'text-transparent'">
+                            </div>
+                            <div class="w-1/2">
+                                <label class="text-xs text-[#a8a29e] font-bold tracking-widest block mb-2">End Date</label>
+                                <input v-model="newTrip.end" type="date" onkeydown="return false"
+                                       class="w-full bg-[#1c1917] border border-[#44403c] rounded-xl px-3 py-3 focus:outline-none focus:border-[#fbbf24] transition text-xs cursor-pointer caret-transparent"
+                                       :class="newTrip.end ? 'text-[#e7e5e4]' : 'text-transparent'">
+                            </div>
                         </div>
                         <div>
                             <label class="text-xs text-[#a8a29e] font-bold tracking-widest block mb-2">封面圖片</label>
+                            
+                            <!-- New Visual Image Selector -->
                             <div class="relative h-48 bg-[#1c1917] rounded-xl border border-[#44403c] overflow-hidden flex items-center justify-center group cursor-pointer hover:border-[#fbbf24] transition border-dashed" @click="triggerFileInput('add-trip-image-input')">
                                 <img v-if="newTrip.image" :src="newTrip.image" class="w-full h-full object-cover">
-                                <div v-else class="text-[#57534e] flex flex-col items-center"><i class="fa-regular fa-image text-2xl mb-2"></i><span class="text-[10px]">點擊選擇封面圖片</span></div>
+                                <div v-else class="text-[#57534e] flex flex-col items-center">
+                                    <i class="fa-regular fa-image text-2xl mb-2"></i>
+                                    <span class="text-[10px]">點擊選擇封面圖片</span>
+                                </div>
                                 <input type="file" id="add-trip-image-input" class="hidden" accept="image/*" @change="handleTripImageUpload">
                             </div>
                         </div>
                     </div>
+                    <!-- Yellow Button -->
                     <button @click="saveNewTrip" class="w-full bg-[#fbbf24] border-b-[6px] border-[#b45309] text-[#1c1917] font-bold py-4 rounded-xl mt-8 hover:bg-[#f59e0b] active:border-b-0 active:translate-y-[6px] active:shadow-none transition-all shadow-lg">建立旅程</button>
                 </div>
             </div>
@@ -703,22 +1009,42 @@
                 <div @click="showEditTripModal = false" class="absolute inset-0 bg-black/60 backdrop-blur-sm pointer-events-auto transition-opacity duration-300"></div>
                 <div class="modal-content relative bg-[#292524] w-full max-w-sm mx-4 sm:mb-0 mb-6 rounded-3xl p-6 shadow-2xl border border-[#44403c] pointer-events-auto transform transition-all duration-300">
                     <div class="flex justify-end items-center mb-0"><button @click="showEditTripModal = false" class="text-[#78716c] hover:text-[#e7e5e4] transition"><i class="fa-solid fa-xmark text-lg"></i></button></div>
+                    <!-- 修改：移除頂部空白 -->
                     <div class="space-y-4">
                         <div><label class="text-xs text-[#a8a29e] font-bold tracking-widest block mb-2">Title</label><input v-model="editingTrip.title" type="text" class="w-full bg-[#1c1917] border border-[#44403c] rounded-xl px-4 py-3 text-[#e7e5e4] placeholder-[#57534e] focus:outline-none focus:border-[#fbbf24] transition"></div>
                         <div class="flex gap-3">
-                            <div class="w-1/2"><label class="text-xs text-[#a8a29e] font-bold tracking-widest block mb-2">Start Date</label><input v-model="editingTrip.start" type="date" onkeydown="return false" class="w-full bg-[#1c1917] border border-[#44403c] rounded-xl px-3 py-3 focus:outline-none focus:border-[#fbbf24] transition text-xs cursor-pointer caret-transparent" :class="editingTrip.start ? 'text-[#e7e5e4]' : 'text-transparent'"></div>
-                            <div class="w-1/2"><label class="text-xs text-[#a8a29e] font-bold tracking-widest block mb-2">End Date</label><input v-model="editingTrip.end" type="date" onkeydown="return false" class="w-full bg-[#1c1917] border border-[#44403c] rounded-xl px-3 py-3 focus:outline-none focus:border-[#fbbf24] transition text-xs cursor-pointer caret-transparent" :class="editingTrip.end ? 'text-[#e7e5e4]' : 'text-transparent'"></div>
+                            <div class="w-1/2">
+                                <label class="text-xs text-[#a8a29e] font-bold tracking-widest block mb-2">Start Date</label>
+                                <input v-model="editingTrip.start" type="date" onkeydown="return false"
+                                       class="w-full bg-[#1c1917] border border-[#44403c] rounded-xl px-3 py-3 focus:outline-none focus:border-[#fbbf24] transition text-xs cursor-pointer caret-transparent"
+                                       :class="editingTrip.start ? 'text-[#e7e5e4]' : 'text-transparent'">
+                            </div>
+                            <div class="w-1/2">
+                                <label class="text-xs text-[#a8a29e] font-bold tracking-widest block mb-2">End Date</label>
+                                <input v-model="editingTrip.end" type="date" onkeydown="return false"
+                                       class="w-full bg-[#1c1917] border border-[#44403c] rounded-xl px-3 py-3 focus:outline-none focus:border-[#fbbf24] transition text-xs cursor-pointer caret-transparent"
+                                       :class="editingTrip.end ? 'text-[#e7e5e4]' : 'text-transparent'">
+                            </div>
                         </div>
                         <div><label class="text-xs text-[#a8a29e] font-bold tracking-widest block mb-2">封面圖片</label><input v-model="editingTrip.image" type="text" class="w-full bg-[#1c1917] border border-[#44403c] rounded-xl px-4 py-3 text-[#e7e5e4] placeholder-[#57534e] focus:outline-none focus:border-[#fbbf24] transition"></div>
                     </div>
-                    <div class="mt-8 flex gap-4"><button @click="deleteTrip" class="w-1/3 rounded-full bg-[#a8a29e] border-b-[6px] border-[#57534e] text-[#1c1917] font-bold py-3 shadow-xl active:border-b-0 active:translate-y-[6px] active:shadow-none transition-all duration-100 flex items-center justify-center gap-2">刪除</button><button @click="saveEditedTrip" class="w-2/3 rounded-full bg-[#a8a29e] border-b-[6px] border-[#57534e] text-[#1c1917] font-bold py-3 shadow-xl active:border-b-0 active:translate-y-[6px] active:shadow-none transition-all duration-100">儲存修改</button></div>
+                    <!-- Update Colors: Delete(Red), Save(Yellow) -->
+                    <div class="mt-8 flex gap-4">
+                        <button @click="deleteTrip" class="w-1/3 rounded-full bg-[#ef4444] border-b-[6px] border-[#b91c1c] text-white font-bold py-3 shadow-xl active:border-b-0 active:translate-y-[6px] active:shadow-none transition-all duration-100 flex items-center justify-center gap-2 hover:bg-[#dc2626]">刪除</button>
+                        <button @click="saveEditedTrip" class="w-2/3 rounded-full bg-[#fbbf24] border-b-[6px] border-[#b45309] text-[#1c1917] font-bold py-3 shadow-xl active:border-b-0 active:translate-y-[6px] active:shadow-none transition-all duration-100 hover:bg-[#f59e0b]">儲存修改</button>
+                    </div>
                 </div>
             </div>
         </transition>
-
         <transition name="modal"><div v-if="showDeleteConfirmModal" class="fixed inset-0 z-[200] flex items-center justify-center pointer-events-none"><div @click="showDeleteConfirmModal = false" class="absolute inset-0 bg-black/70 backdrop-blur-sm pointer-events-auto transition-opacity duration-300"></div><div class="relative bg-[#292524] w-full max-w-xs mx-4 rounded-3xl p-6 shadow-2xl border border-[#44403c] text-center pointer-events-auto transform transition-all duration-300 scale-100"><h3 class="text-lg font-bold text-[#e7e5e4] mb-2">確定要刪除嗎？</h3><p class="text-xs text-[#a8a29e] mb-6">刪除後無法復原。</p><div class="flex gap-3 justify-center"><button @click="showDeleteConfirmModal = false" class="px-6 py-2 rounded-xl bg-[#a8a29e] text-[#1c1917] border border-[#57534e] text-sm font-bold shadow-md hover:bg-[#d6d3d1] transition">取消</button><button @click="confirmDelete" class="px-6 py-2 rounded-xl bg-[#ef4444] text-white text-sm font-bold shadow-lg hover:bg-[#dc2626] transition">確定刪除</button></div></div></div></transition>
+        
+        <!-- Delete Expense Confirm Modal -->
         <transition name="modal"><div v-if="showDeleteExpenseConfirmModal" class="fixed inset-0 z-[200] flex items-center justify-center pointer-events-none"><div @click="showDeleteExpenseConfirmModal = false" class="absolute inset-0 bg-black/70 backdrop-blur-sm pointer-events-auto transition-opacity duration-300"></div><div class="relative bg-[#292524] w-full max-w-xs mx-4 rounded-3xl p-6 shadow-2xl border border-[#44403c] text-center pointer-events-auto transform transition-all duration-300 scale-100"><h3 class="text-lg font-bold text-[#e7e5e4] mb-2">確定要刪除這筆消費嗎？</h3><p class="text-xs text-[#a8a29e] mb-6">刪除後無法復原。</p><div class="flex gap-3 justify-center"><button @click="showDeleteExpenseConfirmModal = false" class="px-6 py-2 rounded-xl bg-[#a8a29e] text-[#1c1917] border border-[#57534e] text-sm font-bold shadow-md hover:bg-[#d6d3d1] transition">取消</button><button @click="executeDeleteExpense" class="px-6 py-2 rounded-xl bg-[#ef4444] text-white text-sm font-bold shadow-lg hover:bg-[#dc2626] transition">確定刪除</button></div></div></div></transition>
+        
+        <!-- 行程刪除確認視窗 -->
         <transition name="modal"><div v-if="showDeleteItemConfirmModal" class="fixed inset-0 z-[200] flex items-center justify-center pointer-events-none"><div @click="showDeleteItemConfirmModal = false" class="absolute inset-0 bg-black/70 backdrop-blur-sm pointer-events-auto transition-opacity duration-300"></div><div class="relative bg-[#292524] w-full max-w-xs mx-4 rounded-3xl p-6 shadow-2xl border border-[#44403c] text-center pointer-events-auto transform transition-all duration-300 scale-100"><h3 class="text-lg font-bold text-[#e7e5e4] mb-2">確定要刪除行程嗎？</h3><p class="text-xs text-[#a8a29e] mb-6">刪除後無法復原。</p><div class="flex gap-3 justify-center"><button @click="showDeleteItemConfirmModal = false" class="px-6 py-2 rounded-xl bg-[#a8a29e] text-[#1c1917] border border-[#57534e] text-sm font-bold shadow-md hover:bg-[#d6d3d1] transition">取消</button><button @click="executeDeleteItem" class="px-6 py-2 rounded-xl bg-[#ef4444] text-white text-sm font-bold shadow-lg hover:bg-[#dc2626] transition">確定</button></div></div></div></transition>
+
+        <!-- Delete Checklist Item Confirm Modal -->
         <transition name="modal"><div v-if="showDeleteChecklistConfirmModal" class="fixed inset-0 z-[200] flex items-center justify-center pointer-events-none"><div @click="showDeleteChecklistConfirmModal = false" class="absolute inset-0 bg-black/70 backdrop-blur-sm pointer-events-auto transition-opacity duration-300"></div><div class="relative bg-[#292524] w-full max-w-xs mx-4 rounded-3xl p-6 shadow-2xl border border-[#44403c] text-center pointer-events-auto transform transition-all duration-300 scale-100"><h3 class="text-lg font-bold text-[#e7e5e4] mb-2">刪除項目？</h3><p class="text-xs text-[#a8a29e] mb-6">確定要刪除此檢查項目嗎？</p><div class="flex gap-3 justify-center"><button @click="showDeleteChecklistConfirmModal = false" class="px-6 py-2 rounded-xl bg-[#a8a29e] text-[#1c1917] border border-[#57534e] text-sm font-bold shadow-md hover:bg-[#d6d3d1] transition">取消</button><button @click="executeDeleteChecklistItem" class="px-6 py-2 rounded-xl bg-[#ef4444] text-white text-sm font-bold shadow-lg hover:bg-[#dc2626] transition">確定</button></div></div></div></transition>
 
         <!-- Item Map Confirmation Modal -->
@@ -727,11 +1053,16 @@
                 <div class="absolute inset-0 bg-black/80 backdrop-blur-sm pointer-events-auto"></div>
                 <div class="relative bg-[#1c1917] w-full h-full sm:max-w-md sm:h-[80vh] sm:rounded-3xl shadow-2xl flex flex-col pointer-events-auto overflow-hidden border border-[#44403c]">
                     <div class="absolute top-4 left-4 right-4 z-[1000] flex justify-between items-start pointer-events-none">
-                        <div class="bg-[#292524]/90 backdrop-blur px-4 py-2 rounded-xl border border-[#44403c] shadow-lg pointer-events-auto"><h3 class="text-[#fbbf24] font-bold text-sm">{{ itemForm.title || '確認位置' }}</h3><p class="text-[10px] text-[#a8a29e]">移動圖釘以修正位置</p></div>
+                        <div class="bg-[#292524]/90 backdrop-blur px-4 py-2 rounded-xl border border-[#44403c] shadow-lg pointer-events-auto">
+                            <h3 class="text-[#fbbf24] font-bold text-sm">{{ itemForm.title || '確認位置' }}</h3>
+                            <p class="text-[10px] text-[#a8a29e]">移動圖釘以修正位置</p>
+                        </div>
                         <button @click="showMapConfirmModal = false; showItemModal = true" class="w-10 h-10 rounded-full bg-[#292524] text-[#e7e5e4] flex items-center justify-center shadow-lg border border-[#44403c] pointer-events-auto"><i class="fa-solid fa-arrow-left"></i></button>
                     </div>
                     <div id="item-confirm-map" class="flex-1 w-full bg-[#292524] relative z-0"></div>
-                    <div class="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/90 to-transparent z-[1001] pointer-events-none flex justify-center pb-8"><button @click="saveItemWithLocation" class="w-full max-w-sm bg-[#fbbf24] border-b-[6px] border-[#b45309] text-[#1c1917] font-bold py-4 rounded-xl shadow-[0_0_20px_rgba(251,191,36,0.4)] active:border-b-0 active:translate-y-[6px] transition-all pointer-events-auto mx-4">確認位置並加入</button></div>
+                    <div class="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/90 to-transparent z-[1001] pointer-events-none flex justify-center pb-8">
+                        <button @click="saveItemWithLocation" class="w-full max-w-sm bg-[#fbbf24] border-b-[6px] border-[#b45309] text-[#1c1917] font-bold py-4 rounded-xl shadow-[0_0_20px_rgba(251,191,36,0.4)] active:border-b-0 active:translate-y-[6px] transition-all pointer-events-auto mx-4">確認位置並加入</button>
+                    </div>
                 </div>
             </div>
         </transition>
@@ -742,30 +1073,69 @@
                 <div @click="showItemModal = false" class="absolute inset-0 bg-black/60 backdrop-blur-sm pointer-events-auto transition-opacity duration-300"></div>
                 <div class="modal-content relative bg-[#292524] w-full max-w-sm mx-4 rounded-3xl p-6 shadow-2xl border border-[#44403c] pointer-events-auto transform transition-all duration-300">
                     <button @click="showItemModal = false" class="absolute top-4 right-4 text-[#78716c] hover:text-[#e7e5e4] transition z-10"><i class="fa-solid fa-xmark text-lg"></i></button>
+                    
+                    <!-- 修改：移除頂部佔位 div，新增類型選擇 Icon 區 -->
                     <div class="space-y-4 mt-8">
+                        
+                        <!-- 類型選擇 Icons -->
                         <div class="flex gap-4 justify-center mb-6">
-                            <button v-for="t in itemTypes" :key="t.id" @click="itemForm.type = t.id" class="w-12 h-12 rounded-full flex flex-col items-center justify-center border transition-all duration-200" :class="itemForm.type === t.id ? 'bg-[#fbbf24] border-[#fbbf24] text-[#1c1917] scale-110 shadow-[0_0_15px_rgba(251,191,36,0.4)]' : 'bg-[#1c1917] border-[#44403c] text-[#78716c] hover:border-[#a8a29e] hover:text-[#a8a29e]'"><i :class="['fa-solid', t.icon, 'text-lg']"></i><span class="text-[8px] font-bold mt-0.5 leading-none">{{ t.label }}</span></button>
+                            <button v-for="t in itemTypes" :key="t.id" 
+                                    @click="itemForm.type = t.id"
+                                    class="w-12 h-12 rounded-full flex flex-col items-center justify-center border transition-all duration-200"
+                                    :class="itemForm.type === t.id ? 'bg-[#fbbf24] border-[#fbbf24] text-[#1c1917] scale-110 shadow-[0_0_15px_rgba(251,191,36,0.4)]' : 'bg-[#1c1917] border-[#44403c] text-[#78716c] hover:border-[#a8a29e] hover:text-[#a8a29e]'">
+                                <i :class="['fa-solid', t.icon, 'text-lg']"></i>
+                                <span class="text-[8px] font-bold mt-0.5 leading-none">{{ t.label }}</span>
+                            </button>
                         </div>
-                        <div><label class="text-xs text-[#a8a29e] font-bold tracking-widest block mb-1">地點 (Location)</label><input v-model="itemForm.title" type="text" class="w-full bg-[#1c1917] border border-[#44403c] rounded-xl px-3 py-2 text-[#e7e5e4] focus:outline-none focus:border-[#fbbf24] transition placeholder-[#57534e]" placeholder="地點名稱..."></div>
+
+                        <div>
+                            <label class="text-xs text-[#a8a29e] font-bold tracking-widest block mb-1">地點 (Location)</label>
+                            <input v-model="itemForm.title" type="text" class="w-full bg-[#1c1917] border border-[#44403c] rounded-xl px-3 py-2 text-[#e7e5e4] focus:outline-none focus:border-[#fbbf24] transition placeholder-[#57534e]" placeholder="地點名稱...">
+                        </div>
+
+                        <!-- 修改：移除原本在此處的「時間 (Time)」欄位 -->
+                        
                         <div class="flex gap-3">
                             <div class="flex-1">
                                 <label class="text-xs text-[#a8a29e] font-bold tracking-widest block mb-1">停留時間 (Duration)</label>
                                 <div class="flex gap-2 items-center">
-                                    <input v-model.number="itemForm.durationHr" @input="validateDurationInput('hr')" type="number" min="0" max="23" class="w-full bg-[#1c1917] border border-[#44403c] rounded-xl px-2 py-2 text-[#e7e5e4] text-center focus:outline-none focus:border-[#fbbf24]" placeholder="Hr">
+                                    <!-- 修改：小時欄位加入 @input="validateDurationInput('hr')" 做防呆 (0-23) -->
+                                    <input v-model.number="itemForm.durationHr" 
+                                           @input="validateDurationInput('hr')"
+                                           type="number" min="0" max="23" 
+                                           class="w-full bg-[#1c1917] border border-[#44403c] rounded-xl px-2 py-2 text-[#e7e5e4] text-center focus:outline-none focus:border-[#fbbf24]" 
+                                           placeholder="Hr">
+                                    
                                     <span class="text-[#57534e] text-xs font-bold">:</span>
-                                    <input v-model.number="itemForm.durationMin" @input="validateDurationInput('min')" type="number" min="0" max="59" class="w-full bg-[#1c1917] border border-[#44403c] rounded-xl px-2 py-2 text-[#e7e5e4] text-center focus:outline-none focus:border-[#fbbf24]" placeholder="Min">
+                                    
+                                    <!-- 修改：分鐘欄位加入 @input="validateDurationInput('min')" 做防呆 (0-59) -->
+                                    <input v-model.number="itemForm.durationMin" 
+                                           @input="validateDurationInput('min')"
+                                           type="number" min="0" max="59" 
+                                           class="w-full bg-[#1c1917] border border-[#44403c] rounded-xl px-2 py-2 text-[#e7e5e4] text-center focus:outline-none focus:border-[#fbbf24]" 
+                                           placeholder="Min">
                                 </div>
                             </div>
                         </div>
+                        
                         <div class="flex gap-2 justify-center py-2">
                             <button v-for="mode in ['car', 'bus', 'walking']" :key="mode" @click="itemForm.travelMode = mode" class="w-10 h-10 rounded-full flex items-center justify-center border transition-all" :class="itemForm.travelMode === mode ? 'bg-[#fbbf24] border-[#fbbf24] text-[#1c1917] scale-110 shadow-lg' : 'bg-[#1c1917] border-[#44403c] text-[#78716c] hover:border-[#a8a29e]'">
                                 <i :class="getTravelIcon(mode)"></i>
                             </button>
                         </div>
                     </div>
+                    
                     <div class="flex gap-4 mt-6">
-                        <button v-if="isEditingItem" @click="confirmDeleteItem" class="w-1/3 bg-[#ef4444] text-white font-bold py-3 rounded-xl shadow-lg active:scale-95 transition flex items-center justify-center gap-2 border border-red-600/30"><i class="fa-solid fa-trash text-xs"></i> 刪除</button>
-                        <button @click="proceedToMapConfirm" class="flex-1 bg-[#fbbf24] border-b-[6px] border-[#b45309] text-[#1c1917] font-bold py-3 rounded-xl hover:bg-[#f59e0b] active:border-b-0 active:translate-y-[6px] active:shadow-none transition-all shadow-lg flex items-center justify-center gap-2"><i class="fa-solid fa-map-location-dot"></i><span>下一步：定位確認</span></button>
+                        <!-- 修改：刪除按鈕樣式改為與消費視窗一致 (紅色、有文字) -->
+                        <button v-if="isEditingItem" @click="confirmDeleteItem" class="w-1/3 bg-[#ef4444] text-white font-bold py-3 rounded-xl shadow-lg active:scale-95 transition flex items-center justify-center gap-2 border border-red-600/30">
+                            <i class="fa-solid fa-trash text-xs"></i> 刪除
+                        </button>
+                        
+                        <!-- 修改：確認按鈕文字改為「下一步：定位確認」，功能維持觸發 proceedToMapConfirm (下方 JS 會更新此函數邏輯) -->
+                        <button @click="proceedToMapConfirm" class="flex-1 bg-[#fbbf24] border-b-[6px] border-[#b45309] text-[#1c1917] font-bold py-3 rounded-xl hover:bg-[#f59e0b] active:border-b-0 active:translate-y-[6px] active:shadow-none transition-all shadow-lg flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-map-location-dot"></i>
+                            <span>下一步：定位確認</span>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -773,10 +1143,13 @@
 
     </div>
 
+    <!-- Firebase SDK (ES Modules) -->
     <script type="module">
+        import { createApp, ref, nextTick, onMounted, onUnmounted, computed, watch } from 'https://unpkg.com/vue@3/dist/vue.esm-browser.js';
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getDatabase, ref as dbRef, set, get, child } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+        import { getDatabase, ref as dbRef, set, onValue, push, child, remove, update, off } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
+        // Firebase Configuration
         const firebaseConfig = {
             apiKey: "AIzaSyAhSqxv2dcCehxuEFA3knWDfEco8dzln1w",
             authDomain: "travel-app-97b9b.firebaseapp.com",
@@ -788,15 +1161,18 @@
             measurementId: "G-DBX1X4XVL7"
         };
 
-        const app = initializeApp(firebaseConfig);
-        const db = getDatabase(app);
-
-        // Access Vue from global window object since we are in module mode but loaded Vue via standard script
-        const { createApp, ref, nextTick, onMounted, onUnmounted, computed, watch } = window.Vue;
+        // Initialize Firebase
+        const firebaseApp = initializeApp(firebaseConfig);
+        const db = getDatabase(firebaseApp);
 
         createApp({
             setup() {
-                const isLoading = ref(true);
+                // 資料載入 Helper (for LocalStorage)
+                const loadStorage = (key, defaultVal) => {
+                    const stored = localStorage.getItem(key);
+                    return stored ? JSON.parse(stored) : defaultVal;
+                };
+
                 const currentPage = ref('home'); 
                 const currentTab = ref('itinerary');
                 const currentView = ref('list'); 
@@ -804,11 +1180,12 @@
                 const confirmMapInstance = ref(null);
                 const confirmMarker = ref(null);
                 const selectedItem = ref(null);
-                const weatherLoading = ref(false); 
+                const weatherLoading = ref(false);
                 
                 let sortableInstance = null;
                 let tripSortableInstance = null;
 
+                // Modals
                 const showAddTripModal = ref(false);
                 const showEditTripModal = ref(false);
                 const showDeleteConfirmModal = ref(false);
@@ -820,24 +1197,25 @@
                 const showAddChecklistModal = ref(false); 
                 const showDeleteChecklistConfirmModal = ref(false); 
                 const showFlightModal = ref(false);
-                const showTravelTimeModal = ref(false); 
-                const showTimeEditModal = ref(false); 
+                const showTravelTimeModal = ref(false);
+                const showTimeEditModal = ref(false);
 
                 // Flight
-                const editingFlightType = ref('out'); 
-                const currentFlightType = ref('out'); 
+                const editingFlightType = ref('out');
+                const currentFlightType = ref('out');
                 const flightForm = ref({ depAirport: '', arrAirport: '', number: '', depTime: '', arrTime: '', arrDayOffset: 0, dep: '', arr: '', duration: '' });
-                const isCalculatingFlight = ref(false); 
+                const isCalculatingFlight = ref(false);
                 
-                // Travel Time
+                // Travel Time Editing
                 const editingTravelItem = ref(null);
                 const travelTimeForm = ref({ type: 'auto', minutes: 0, hours: 0, mode: 'car' });
                 
-                // Time Edit
+                // Start Time Editing
                 const editingHours = ref('');
                 const editingMinutes = ref('');
                 let editingItemRef = null;
 
+                // Validate Time Inputs
                 const validateTimeInput = (type) => {
                     if (type === 'hour') {
                         if (editingHours.value === '' || editingHours.value === null) return;
@@ -873,20 +1251,19 @@
 
                 const newTrip = ref({ title: '', start: '', end: '', image: null });
                 const editingTrip = ref({ id: '', title: '', start: '', end: '', image: '' });
-                const hotelForm = ref({ name: '', phone: '', address: '', lat: 0, lng: 0 }); 
+                const hotelForm = ref({ name: '', phone: '', address: '', lat: 0, lng: 0 });
                 const hotelMapInstance = ref(null);
                 const hotelMapMarker = ref(null);
 
                 const newChecklistItemName = ref('');
                 const targetChecklistCategory = ref('');
-                const longPressTimer = ref(null); 
-                const checklistDeleteTarget = ref({ category: null, index: null }); 
                 
                 const timeOptions = [];
                 for (let h = 0; h < 24; h++) { const hh = String(h).padStart(2, '0'); timeOptions.push(`${hh}:00`); timeOptions.push(`${hh}:30`); }
 
                 const itemForm = ref({ id: '', title: '', type: 'spot', arrivalTime: '10:00', durationHr: 1, durationMin: 30, lat: -8.5069, lng: 115.2625, openingHours: '', notes: '', travelMode: 'car' });
                 const isEditingItem = ref(false);
+                
                 const itemTypes = [
                     { id: 'spot', icon: 'fa-location-dot', label: '景點' },
                     { id: 'food', icon: 'fa-utensils', label: '餐廳' },
@@ -894,13 +1271,46 @@
                     { id: 'airport', icon: 'fa-plane', label: '機場' }
                 ];
 
+                // --- 花費頁面資料 ---
                 const showCurrencyModal = ref(false);
                 const showExpenseModal = ref(false);
                 const showCalculator = ref(false);
                 
-                const currency = ref({ code: 'JPY', rate: 0.22 });
+                // Currency remains in LocalStorage as per request (since it's a global preference/cache)
+                const currency = ref(loadStorage('myTrip_currency', { code: 'JPY', rate: 0.22 }));
                 const exchangeRates = ref({ 'JPY': 0.22, 'USD': 32.5, 'KRW': 0.024, 'EUR': 35.1, 'THB': 0.9, 'IDR': 0.002 });
+                
+                // === FIREBASE DATA REFS ===
+                // Initialize as empty/default, populated by connectFirebase()
                 const expenses = ref([]);
+                const itinerary = ref([]);
+                
+                const defaultInfo = {
+                    flight: { 
+                        out: { depAirport: '', arrAirport: '', number: '', dep: '', arr: '', duration: '', arrDayOffset: 0, currentUser: 'user1' }, 
+                        in: { depAirport: '', arrAirport: '', number: '', dep: '', arr: '', duration: '', arrDayOffset: 0, currentUser: 'user1' }, 
+                        currentUser: 'user1', images: { user1: null, user2: null } 
+                    },
+                    hotel: { 
+                        currentIndex: 0,
+                        list: [
+                            { name: '', phone: '', address: '', lat: -8.5069, lng: 115.2625 },
+                            { name: '', phone: '', address: '', lat: -8.5069, lng: 115.2625 },
+                            { name: '', phone: '', address: '', lat: -8.5069, lng: 115.2625 },
+                            { name: '', phone: '', address: '', lat: -8.5069, lng: 115.2625 },
+                            { name: '', phone: '', address: '', lat: -8.5069, lng: 115.2625 }
+                        ]
+                    },
+                    visa: { currentUser: 'user1', images: { user1: null, user2: null } },
+                    checklist: {
+                        '重要項目': [{name: '護照', checked: false}, {name: '外幣', checked: false}],
+                        '電子產品': [{name: '手機', checked: false}, {name: '相機', checked: false}, {name: 'Gopro', checked: false}, {name: 'Chromecast', checked: false}, {name: '萬國充電器', checked: false}, {name: '充電線', checked: false}],
+                        '雜項': [{name: '衣物', checked: false}, {name: '牙刷', checked: false}, {name: '衛生紙', checked: false}, {name: '藥品', checked: false}]
+                    }
+                };
+                // Reactive Info object, structure merged on load
+                const info = ref(JSON.parse(JSON.stringify(defaultInfo)));
+
                 const expenseForm = ref({ id: null, category: 'food', title: '', amountTWD: '', amountForeign: '', date: new Date().toISOString().split('T')[0], payment: '現金', notes: '' });
                 
                 const activeExpenseMenuId = ref(null);
@@ -908,7 +1318,13 @@
                 const deleteExpenseId = ref(null);
                 const showDeleteExpenseConfirmModal = ref(false);
 
-                const toggleExpenseMenu = (id) => { activeExpenseMenuId.value = activeExpenseMenuId.value === id ? null : id; };
+                const toggleExpenseMenu = (id) => {
+                    if (activeExpenseMenuId.value === id) {
+                        activeExpenseMenuId.value = null;
+                    } else {
+                        activeExpenseMenuId.value = id;
+                    }
+                };
 
                 const editExpense = (exp) => {
                     activeExpenseMenuId.value = null;
@@ -926,7 +1342,9 @@
                 const executeDeleteExpense = () => {
                     if (deleteExpenseId.value) {
                         const index = expenses.value.findIndex(e => e.id === deleteExpenseId.value);
-                        if (index !== -1) { expenses.value.splice(index, 1); }
+                        if (index !== -1) {
+                            expenses.value.splice(index, 1);
+                        }
                     }
                     showDeleteExpenseConfirmModal.value = false;
                     deleteExpenseId.value = null;
@@ -952,33 +1370,9 @@
                 let chartInstance = null;
                 const chartLegendData = ref([]);
 
-                const defaultInfo = {
-                    flight: { 
-                        out: { depAirport: '', arrAirport: '', number: '', dep: '', arr: '', duration: '', arrDayOffset: 0, currentUser: 'user1' }, 
-                        in: { depAirport: '', arrAirport: '', number: '', dep: '', arr: '', duration: '', arrDayOffset: 0, currentUser: 'user1' }, 
-                        currentUser: 'user1', images: { user1: null, user2: null } 
-                    },
-                    hotel: { 
-                        currentIndex: 0,
-                        list: [
-                            { name: '', phone: '', address: '', lat: -8.5069, lng: 115.2625 },
-                            { name: '', phone: '', address: '', lat: -8.5069, lng: 115.2625 },
-                            { name: '', phone: '', address: '', lat: -8.5069, lng: 115.2625 },
-                            { name: '', phone: '', address: '', lat: -8.5069, lng: 115.2625 },
-                            { name: '', phone: '', address: '', lat: -8.5069, lng: 115.2625 }
-                        ]
-                    },
-                    visa: { currentUser: 'user1', images: { user1: null, user2: null } },
-                    checklist: {
-                        '重要項目': [{name: '護照', checked: false}, {name: '外幣', checked: false}],
-                        '電子產品': [{name: '手機', checked: false}, {name: '相機', checked: false}, {name: 'Gopro', checked: false}, {name: 'Chromecast', checked: false}, {name: '萬國充電器', checked: false}, {name: '充電線', checked: false}],
-                        '雜項': [{name: '衣物', checked: false}, {name: '牙刷', checked: false}, {name: '衛生紙', checked: false}, {name: '藥品', checked: false}]
-                    }
-                };
-                const info = ref(JSON.parse(JSON.stringify(defaultInfo)));
-
+                // TRIPS remain in LocalStorage as requested ("Except for trip page")
                 const defaultTrips = [{ id: 'bali', title: 'Bali Trip', displayDate: '2026-4/1 ~ 4/6', startDate: '2026-04-01', endDate: '2026-04-06', image: 'https://i.ibb.co/fdndWNk4/banner.jpg', timezone: 'Asia/Makassar' }];
-                const trips = ref(JSON.parse(JSON.stringify(defaultTrips)));
+                const trips = ref(loadStorage('myTrip_trips', defaultTrips));
                 
                 const currentTrip = ref(trips.value[0]); 
                 const dates = ref([]);
@@ -989,16 +1383,87 @@
                 const dynamicTimezone = ref('UTC');
                 let timeInterval = null;
 
-                const itinerary = ref([]); 
+                // Flags to prevent infinite loop (Firebase update -> Watcher -> Firebase update)
+                let isRemoteUpdateItinerary = false;
+                let isRemoteUpdateExpenses = false;
+                let isRemoteUpdateInfo = false;
 
-                // Setup watchers for Firebase sync AFTER data is loaded
-                const setupWatchers = () => {
-                    watch(trips, (newVal) => set(dbRef(db, 'travel-app-data/trips'), newVal), { deep: true });
-                    watch(itinerary, (newVal) => set(dbRef(db, 'travel-app-data/itinerary'), newVal), { deep: true });
-                    watch(expenses, (newVal) => set(dbRef(db, 'travel-app-data/expenses'), newVal), { deep: true });
-                    watch(info, (newVal) => set(dbRef(db, 'travel-app-data/info'), newVal), { deep: true });
-                    watch(currency, (newVal) => set(dbRef(db, 'travel-app-data/currency'), newVal), { deep: true });
+                // --- Firebase Connection Logic ---
+                const connectFirebase = (tripId) => {
+                    if (!tripId) return;
+
+                    const tripItineraryRef = dbRef(db, `trips/${tripId}/itinerary`);
+                    const tripExpensesRef = dbRef(db, `trips/${tripId}/expenses`);
+                    const tripInfoRef = dbRef(db, `trips/${tripId}/info`);
+
+                    // Remove existing listeners if switching trips (though openTrip usually switches page context)
+                    off(tripItineraryRef);
+                    off(tripExpensesRef);
+                    off(tripInfoRef);
+
+                    // 1. Itinerary Listener
+                    onValue(tripItineraryRef, (snapshot) => {
+                        isRemoteUpdateItinerary = true;
+                        const data = snapshot.val();
+                        itinerary.value = data ? (Array.isArray(data) ? data : Object.values(data)) : [];
+                        nextTick(() => { 
+                            recalcTimeline(); 
+                            isRemoteUpdateItinerary = false; 
+                        });
+                    });
+
+                    // 2. Expenses Listener
+                    onValue(tripExpensesRef, (snapshot) => {
+                        isRemoteUpdateExpenses = true;
+                        const data = snapshot.val();
+                        expenses.value = data ? (Array.isArray(data) ? data : Object.values(data)) : [];
+                        nextTick(() => { 
+                            if(currentTab.value === 'expenses') renderChart();
+                            isRemoteUpdateExpenses = false; 
+                        });
+                    });
+
+                    // 3. Info Listener
+                    onValue(tripInfoRef, (snapshot) => {
+                        isRemoteUpdateInfo = true;
+                        const data = snapshot.val();
+                        // Merge with defaultInfo to ensure structure exists
+                        if (data) {
+                            info.value = { ...defaultInfo, ...data, flight: { ...defaultInfo.flight, ...data.flight }, hotel: { ...defaultInfo.hotel, ...data.hotel }, visa: { ...defaultInfo.visa, ...data.visa }, checklist: { ...defaultInfo.checklist, ...data.checklist } };
+                        } else {
+                            info.value = JSON.parse(JSON.stringify(defaultInfo));
+                        }
+                        nextTick(() => isRemoteUpdateInfo = false);
+                    });
                 };
+
+                // --------------------- Watchers (Sync Local -> Firebase) ---------------------
+                // Only sync if change is NOT from remote
+                watch(itinerary, (newVal) => {
+                    if (isRemoteUpdateItinerary) return;
+                    if (currentTrip.value && currentTrip.value.id) {
+                        set(dbRef(db, `trips/${currentTrip.value.id}/itinerary`), newVal);
+                    }
+                }, { deep: true });
+
+                watch(expenses, (newVal) => {
+                    if (isRemoteUpdateExpenses) return;
+                    if (currentTrip.value && currentTrip.value.id) {
+                        set(dbRef(db, `trips/${currentTrip.value.id}/expenses`), newVal);
+                    }
+                }, { deep: true });
+
+                watch(info, (newVal) => {
+                    if (isRemoteUpdateInfo) return;
+                    if (currentTrip.value && currentTrip.value.id) {
+                        set(dbRef(db, `trips/${currentTrip.value.id}/info`), newVal);
+                    }
+                }, { deep: true });
+
+                // LocalStorage persistence for Trips and Currency (unchanged)
+                watch(trips, (newVal) => localStorage.setItem('myTrip_trips', JSON.stringify(newVal)), { deep: true });
+                watch(currency, (newVal) => localStorage.setItem('myTrip_currency', JSON.stringify(newVal)), { deep: true });
+                // ----------------------------------------------------------------
 
                 const filteredItinerary = computed(() => {
                     if (!selectedDate.value || !selectedDate.value.full) return [];
@@ -1007,24 +1472,44 @@
 
                 const filteredExpensesList = computed(() => {
                     let list = expenses.value;
-                    if (expenseFilter.value !== 'all') { list = list.filter(e => e.category === expenseFilter.value); }
-                    return list.slice().sort((a, b) => { const dateA = new Date(a.date); const dateB = new Date(b.date); return dateB - dateA || b.id - a.id; });
+                    if (expenseFilter.value !== 'all') {
+                        list = list.filter(e => e.category === expenseFilter.value);
+                    }
+                    return list.slice().sort((a, b) => {
+                        const dateA = new Date(a.date);
+                        const dateB = new Date(b.date);
+                        return dateB - dateA || b.id - a.id;
+                    });
                 });
 
                 const totalExpenseFontClass = computed(() => {
                     const val = totalExpensesTWD.value.toLocaleString();
                     const len = val.length + 2; 
-                    if (len > 12) return 'text-base'; if (len > 10) return 'text-lg'; if (len > 8) return 'text-xl'; if (len > 6) return 'text-2xl'; return 'text-4xl';
+                    if (len > 12) return 'text-base';
+                    if (len > 10) return 'text-lg';
+                    if (len > 8) return 'text-xl';
+                    if (len > 6) return 'text-2xl';
+                    return 'text-4xl';
                 });
 
-                const getLegendValSize = (val) => { const len = val.toLocaleString().length; if (len > 8) return 'text-[7px]'; if (len > 6) return 'text-[8px]'; return 'text-[9px]'; };
+                const getLegendValSize = (val) => {
+                    const len = val.toLocaleString().length;
+                    if (len > 8) return 'text-[7px]';
+                    if (len > 6) return 'text-[8px]';
+                    return 'text-[9px]';
+                };
+
                 const totalExpensesTWD = computed(() => expenses.value.reduce((sum, item) => sum + (item.amountTWD || 0), 0));
 
                 const updateTime = () => {
                     const now = new Date();
                     currentTimeTW.value = now.toLocaleTimeString('en-US', { timeZone: 'Asia/Taipei', hour: '2-digit', minute: '2-digit', hour12: true });
                     const targetZone = dynamicTimezone.value || currentTrip.value.timezone || 'Asia/Taipei';
-                    try { currentTimeLocal.value = now.toLocaleTimeString('en-US', { timeZone: targetZone, hour: '2-digit', minute: '2-digit', hour12: true }); } catch (e) { currentTimeLocal.value = '--:--'; }
+                    try { 
+                        currentTimeLocal.value = now.toLocaleTimeString('en-US', { timeZone: targetZone, hour: '2-digit', minute: '2-digit', hour12: true }); 
+                    } catch (e) { 
+                        currentTimeLocal.value = '--:--'; 
+                    }
                 };
                 
                 const generateTripDates = (startStr, endStr) => { const start = new Date(startStr); const end = new Date(endStr); const dateArray = []; let current = new Date(start); while (current <= end) { const dayName = new Intl.DateTimeFormat('en-US', { weekday: 'short' }).format(current); const month = current.getMonth() + 1; const day = current.getDate(); const fullDate = current.toISOString().split('T')[0]; dateArray.push({ day: dayName, displayDate: `${month}/${day}`, full: fullDate }); current.setDate(current.getDate() + 1); } return dateArray; };
@@ -1033,7 +1518,9 @@
                     try {
                         const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=3&accept-language=en`);
                         const data = await response.json();
-                        if (data && data.address && data.address.country) { return data.address.country; }
+                        if (data && data.address && data.address.country) {
+                            return data.address.country;
+                        }
                     } catch (e) { console.error("Fetch country failed", e); }
                     return null;
                 };
@@ -1050,26 +1537,41 @@
                         if (data.current) { 
                             const code = data.current.weather_code; 
                             let icon = 'fa-cloud'; 
-                            if (code === 0) icon = 'fa-sun'; else if (code <= 3) icon = 'fa-cloud-sun'; else if (code <= 48) icon = 'fa-smog'; else if (code <= 67) icon = 'fa-cloud-rain'; else if (code <= 77) icon = 'fa-snowflake'; else if (code <= 82) icon = 'fa-cloud-showers-heavy'; else icon = 'fa-bolt'; 
+                            if (code === 0) icon = 'fa-sun'; 
+                            else if (code <= 3) icon = 'fa-cloud-sun'; 
+                            else if (code <= 48) icon = 'fa-smog'; 
+                            else if (code <= 67) icon = 'fa-cloud-rain'; 
+                            else if (code <= 77) icon = 'fa-snowflake'; 
+                            else if (code <= 82) icon = 'fa-cloud-showers-heavy'; 
+                            else icon = 'fa-bolt'; 
                             weather.value = { temp: Math.round(data.current.temperature_2m), feelsLike: Math.round(data.current.apparent_temperature), icon: `fa-solid ${icon}`, locationLabel: displayLabel }; 
                         } 
                     } catch (e) {
-                        console.error(e);
                         weather.value = { temp: '--', feelsLike: '--', icon: 'fa-solid fa-minus', locationLabel: forcedLabel || '---' };
-                    } finally { setTimeout(() => { weatherLoading.value = false; }, 300); }
+                    } finally {
+                        setTimeout(() => { weatherLoading.value = false; }, 300);
+                    }
                 };
 
                 const updateDashboardContext = () => {
                     weatherLoading.value = true;
                     const list = filteredItinerary.value;
-                    if (list.length > 0) { const first = list[0]; fetchWeather(first.lat, first.lng, null, null); } 
-                    else { fetchWeather(25.0330, 121.5654, 'Taiwan', 'Asia/Taipei'); }
+                    if (list.length > 0) {
+                        const first = list[0];
+                        fetchWeather(first.lat, first.lng, null, null);
+                    } else {
+                        fetchWeather(25.0330, 121.5654, 'Taiwan', 'Asia/Taipei');
+                    }
                 };
 
                 const getCurrentLocationWeather = () => { 
                     if (!navigator.geolocation) return; 
                     weatherLoading.value = true;
-                    navigator.geolocation.getCurrentPosition((pos) => { fetchWeather(pos.coords.latitude, pos.coords.longitude, null, null); }, (err) => { updateDashboardContext(); }); 
+                    navigator.geolocation.getCurrentPosition((pos) => { 
+                        fetchWeather(pos.coords.latitude, pos.coords.longitude, null, null); 
+                    }, (err) => { 
+                        updateDashboardContext();
+                    }); 
                 };
 
                 const fetchExchangeRates = async () => {
@@ -1079,7 +1581,9 @@
                         if (data && data.rates) {
                             const newRates = {};
                             const targetCurrencies = ['JPY', 'USD', 'KRW', 'EUR', 'THB', 'IDR'];
-                            targetCurrencies.forEach(code => { if (data.rates[code]) { newRates[code] = 1 / data.rates[code]; } else { newRates[code] = exchangeRates.value[code]; } });
+                            targetCurrencies.forEach(code => {
+                                if (data.rates[code]) { newRates[code] = 1 / data.rates[code]; } else { newRates[code] = exchangeRates.value[code]; }
+                            });
                             exchangeRates.value = newRates;
                             if (currency.value.code && exchangeRates.value[currency.value.code]) { currency.value.rate = exchangeRates.value[currency.value.code]; }
                         }
@@ -1088,27 +1592,58 @@
 
                 const openTrip = (trip) => { 
                     currentTrip.value = trip; 
-                    set(dbRef(db, 'travel-app-data/lastTripId'), trip.id);
+                    localStorage.setItem('myTrip_lastTripId', trip.id);
+                    
+                    // CONNECT TO FIREBASE FOR THIS TRIP
+                    connectFirebase(trip.id);
+
                     if (trip.startDate && trip.endDate) { dates.value = generateTripDates(trip.startDate, trip.endDate); selectedDate.value = dates.value[0] || {}; } else { dates.value = []; } 
                     currentPage.value = 'detail'; 
                     currentTab.value = 'itinerary'; 
                     currentView.value = 'list'; 
-                    nextTick(() => { updateDashboardContext(); recalcTimeline(); });
+                    
+                    nextTick(() => {
+                        updateDashboardContext();
+                        recalcTimeline();
+                    });
                     updateTime(); 
                 };
 
                 watch(currentTab, (newTab) => {
-                    if (newTab === 'expenses') { if (!sessionStorage.getItem('currencySelected')) { showCurrencyModal.value = true; sessionStorage.setItem('currencySelected', 'true'); } nextTick(renderChart); }
-                    if (newTab === 'itinerary' && currentView.value === 'list') { nextTick(() => initSortable()); }
+                    if (newTab === 'expenses') {
+                        if (!sessionStorage.getItem('currencySelected')) {
+                            showCurrencyModal.value = true;
+                            sessionStorage.setItem('currencySelected', 'true');
+                        }
+                        nextTick(renderChart);
+                    }
+                    if (newTab === 'itinerary' && currentView.value === 'list') {
+                        nextTick(() => initSortable());
+                    }
                 });
 
-                watch(currentPage, (newVal) => { if (newVal === 'home') { nextTick(() => initSortable()); } });
-                watch(chartType, () => { if(currentTab.value === 'expenses') nextTick(renderChart); });
-                watch(expenses, () => { if(currentTab.value === 'expenses') nextTick(renderChart); }, { deep: true });
+                watch(currentPage, (newVal) => {
+                    if (newVal === 'home') {
+                        nextTick(() => initSortable());
+                    }
+                });
 
-                const selectCurrency = (code) => { currency.value = { code, rate: exchangeRates.value[code] }; showCurrencyModal.value = false; };
-                const onConvForeignInput = () => { if (convForeign.value === '' || convForeign.value === null) { convTWD.value = ''; return; } convTWD.value = Math.round(convForeign.value * currency.value.rate * 100) / 100; };
-                const onConvTWDInput = () => { if (convTWD.value === '' || convTWD.value === null) { convForeign.value = ''; return; } convForeign.value = Math.round(convTWD.value / currency.value.rate * 100) / 100; };
+                watch(chartType, () => { if(currentTab.value === 'expenses') nextTick(renderChart); });
+                
+                const selectCurrency = (code) => {
+                    currency.value = { code, rate: exchangeRates.value[code] };
+                    showCurrencyModal.value = false;
+                };
+
+                const onConvForeignInput = () => {
+                    if (convForeign.value === '' || convForeign.value === null) { convTWD.value = ''; return; }
+                    convTWD.value = Math.round(convForeign.value * currency.value.rate * 100) / 100;
+                };
+                const onConvTWDInput = () => {
+                    if (convTWD.value === '' || convTWD.value === null) { convForeign.value = ''; return; }
+                    convForeign.value = Math.round(convTWD.value / currency.value.rate * 100) / 100;
+                };
+                
                 watch(() => currency.value.rate, () => { if (convForeign.value !== '') onConvForeignInput(); });
 
                 const openAddExpenseModal = () => {
@@ -1118,10 +1653,20 @@
                     showExpenseModal.value = true;
                 };
 
-                const onInputTwd = () => { if (expenseForm.value.amountTWD === '' || expenseForm.value.amountTWD === null) return; expenseForm.value.amountForeign = Math.round(expenseForm.value.amountTWD / currency.value.rate); };
-                const onInputForeign = () => { if (expenseForm.value.amountForeign === '' || expenseForm.value.amountForeign === null) return; expenseForm.value.amountTWD = Math.round(expenseForm.value.amountForeign * currency.value.rate); };
+                const onInputTwd = () => {
+                    if (expenseForm.value.amountTWD === '' || expenseForm.value.amountTWD === null) return;
+                    expenseForm.value.amountForeign = Math.round(expenseForm.value.amountTWD / currency.value.rate);
+                };
+                const onInputForeign = () => {
+                    if (expenseForm.value.amountForeign === '' || expenseForm.value.amountForeign === null) return;
+                    expenseForm.value.amountTWD = Math.round(expenseForm.value.amountForeign * currency.value.rate);
+                };
 
-                const openCalculator = (target) => { calcTarget.value = target; calcDisplay.value = '0'; showCalculator.value = true; };
+                const openCalculator = (target) => {
+                    calcTarget.value = target;
+                    calcDisplay.value = '0';
+                    showCalculator.value = true;
+                };
                 const calcAppend = (n) => { calcDisplay.value = calcDisplay.value === '0' ? n : calcDisplay.value + n; };
                 const calcOp = (op) => { if(!['+','-','*','/'].includes(calcDisplay.value.slice(-1))) calcDisplay.value += op; };
                 const calcClear = () => { calcDisplay.value = '0'; };
@@ -1138,12 +1683,20 @@
 
                 const saveExpense = () => {
                     if (!expenseForm.value.title || !expenseForm.value.amountTWD) return;
-                    if (isEditingExpense.value && expenseForm.value.id) { const index = expenses.value.findIndex(e => e.id === expenseForm.value.id); if (index !== -1) { expenses.value[index] = { ...expenseForm.value }; } } 
-                    else { expenses.value.push({ ...expenseForm.value, id: Date.now() }); }
+                    if (isEditingExpense.value && expenseForm.value.id) {
+                        const index = expenses.value.findIndex(e => e.id === expenseForm.value.id);
+                        if (index !== -1) { expenses.value[index] = { ...expenseForm.value }; }
+                    } else {
+                        expenses.value.push({ ...expenseForm.value, id: Date.now() });
+                    }
+                    // Watcher handles sync
                     showExpenseModal.value = false;
                 };
 
-                const getExpenseIcon = (c) => { const map = { food: 'fa-utensils', transport: 'fa-bus', hotel: 'fa-hotel', ticket: 'fa-ticket', shopping: 'fa-bag-shopping', other: 'fa-circle-question' }; return `fa-solid ${map[c]}`; };
+                const getExpenseIcon = (c) => {
+                    const map = { food: 'fa-utensils', transport: 'fa-bus', hotel: 'fa-hotel', ticket: 'fa-ticket', shopping: 'fa-bag-shopping', other: 'fa-circle-question' };
+                    return `fa-solid ${map[c]}`;
+                };
 
                 const renderChart = () => {
                     const ctx = document.getElementById('expenseChart');
@@ -1174,7 +1727,21 @@
                         const nm = totalMins % 60;
                         newTime = `${String(nh).padStart(2,'0')}:${String(nm).padStart(2,'0')}`;
                     }
-                    itemForm.value = { id: '', title: '', type: 'spot', arrivalTime: newTime, durationHr: 1, durationMin: 30, lat: -8.5069, lng: 115.2625, openingHours: '', notes: '', travelMode: 'car', calculatedTravelTime: 0 }; 
+
+                    itemForm.value = { 
+                        id: '', 
+                        title: '', 
+                        type: 'spot', 
+                        arrivalTime: newTime, 
+                        durationHr: 1, 
+                        durationMin: 30, 
+                        lat: -8.5069, 
+                        lng: 115.2625, 
+                        openingHours: '', 
+                        notes: '', 
+                        travelMode: 'car',
+                        calculatedTravelTime: 0
+                    }; 
                     showItemModal.value = true; 
                 };
                 const openEditItemModal = (item) => { isEditingItem.value = true; itemForm.value = JSON.parse(JSON.stringify(item)); showItemModal.value = true; };
@@ -1186,12 +1753,25 @@
                     const h = Math.floor(totalMins / 60);
                     const m = totalMins % 60;
                     const currentMode = item.travelMode || 'car';
-                    travelTimeForm.value = { type: item.isManualTravelTime ? 'manual' : 'auto', mode: currentMode, hours: h, minutes: m };
+                    travelTimeForm.value = {
+                        type: item.isManualTravelTime ? 'manual' : 'auto',
+                        mode: currentMode,
+                        hours: h,
+                        minutes: m
+                    };
                     showTravelTimeModal.value = true;
                 };
 
-                const setTravelMode = (type) => { travelTimeForm.value.type = type; };
-                const getModeName = (mode) => { if (mode === 'car') return '開車'; if (mode === 'bus') return '大眾運輸'; if (mode === 'walking') return '步行'; return '交通'; };
+                const setTravelMode = (type) => {
+                    travelTimeForm.value.type = type;
+                };
+                
+                const getModeName = (mode) => {
+                    if (mode === 'car') return '開車';
+                    if (mode === 'bus') return '大眾運輸';
+                    if (mode === 'walking') return '步行';
+                    return '交通';
+                };
 
                 const saveTravelTime = () => {
                     if (!editingTravelItem.value) return;
@@ -1205,7 +1785,9 @@
                             item.isManualTravelTime = true;
                             item.manualTravelMinutes = total;
                             item.calculatedTravelTime = total; 
-                        } else { item.isManualTravelTime = false; }
+                        } else {
+                            item.isManualTravelTime = false;
+                        }
                     }
                     recalcTimeline(); 
                     showTravelTimeModal.value = false;
@@ -1217,7 +1799,10 @@
                         const parts = item.arrivalTime.split(':');
                         editingHours.value = parts[0];
                         editingMinutes.value = parts[1];
-                    } else { editingHours.value = '09'; editingMinutes.value = '00'; }
+                    } else {
+                        editingHours.value = '09';
+                        editingMinutes.value = '00';
+                    }
                     showTimeEditModal.value = true;
                 };
                 
@@ -1230,7 +1815,10 @@
                         m = Math.max(0, Math.min(59, m));
                         const timeStr = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
                         const targetItem = itinerary.value.find(i => i.id === editingItemRef.id);
-                        if (targetItem) { targetItem.arrivalTime = timeStr; recalcTimeline(); }
+                        if (targetItem) {
+                            targetItem.arrivalTime = timeStr;
+                            recalcTimeline();
+                        }
                     }
                     showTimeEditModal.value = false;
                 };
@@ -1243,9 +1831,17 @@
                         const query = encodeURIComponent(itemForm.value.title); 
                         const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${query}&limit=1`); 
                         const data = await response.json(); 
-                        if (data && data.length > 0) { itemForm.value.lat = parseFloat(data[0].lat); itemForm.value.lng = parseFloat(data[0].lon); } 
-                        else { itemForm.value.lat = DEFAULT_LAT; itemForm.value.lng = DEFAULT_LNG; }
-                    } catch (e) { itemForm.value.lat = DEFAULT_LAT; itemForm.value.lng = DEFAULT_LNG; }
+                        if (data && data.length > 0) { 
+                            itemForm.value.lat = parseFloat(data[0].lat); 
+                            itemForm.value.lng = parseFloat(data[0].lon); 
+                        } else {
+                            itemForm.value.lat = DEFAULT_LAT;
+                            itemForm.value.lng = DEFAULT_LNG;
+                        }
+                    } catch (e) { 
+                        itemForm.value.lat = DEFAULT_LAT;
+                        itemForm.value.lng = DEFAULT_LNG;
+                    }
 
                     showItemModal.value = false; 
                     showMapConfirmModal.value = true; 
@@ -1265,6 +1861,7 @@
                 const saveItemWithLocation = () => { 
                     const newItem = { ...itemForm.value, id: Date.now(), date: selectedDate.value.full, address: `${itemForm.value.lat.toFixed(4)}, ${itemForm.value.lng.toFixed(4)}` };
                     itinerary.value.push(newItem); 
+                    // Watcher syncs
                     recalcTimeline();
                     showMapConfirmModal.value = false; 
                     nextTick(() => { if(currentView.value === 'list') initSortable(); }); 
@@ -1296,12 +1893,12 @@
                         const res = await fetch(url);
                         const data = await res.json();
                         if (data.routes && data.routes.length > 0) {
-                            let durationSeconds = data.routes[0].duration; 
+                            let durationSeconds = data.routes[0].duration;
                             if (mode === 'bus') { durationSeconds = (durationSeconds * 1.5) + (10 * 60); }
-                            return Math.round(durationSeconds / 60); 
+                            return Math.round(durationSeconds / 60);
                         }
                     } catch (e) { console.warn("OSRM fetch failed, falling back to math", e); }
-                    return null; 
+                    return null;
                 };
 
                 const formatTravelTime = (mins) => {
@@ -1312,9 +1909,12 @@
                     return `${h} hr ${m} min`;
                 };
 
-                const calculateTravelTime = (item1, item2) => { if (!item1 || !item2) return '-- min'; return formatTravelTime(item1.calculatedTravelTime); };
+                const calculateTravelTime = (item1, item2) => { 
+                    if (!item1 || !item2) return '-- min'; 
+                    return formatTravelTime(item1.calculatedTravelTime);
+                };
+
                 const getTravelIcon = (mode) => { if (mode === 'walking') return 'fa-solid fa-person-walking'; if (mode === 'bus') return 'fa-solid fa-bus-simple'; return 'fa-solid fa-car'; };
-                
                 const toggleTravelMode = (item) => { 
                     const modes = ['car', 'bus', 'walking']; 
                     const currentIdx = modes.indexOf(item.travelMode || 'car'); 
@@ -1323,7 +1923,6 @@
                     item.isManualTravelTime = false; 
                     recalcTimeline(); 
                 };
-                
                 const triggerFileInput = (id) => { document.getElementById(id).click(); };
                 const handleImageUpload = (event, type) => { const file = event.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = (e) => { const currentUser = info.value[type].currentUser; info.value[type].images[currentUser] = e.target.result; }; reader.readAsDataURL(file); };
                 const toggleUser = (type) => { info.value[type].currentUser = info.value[type].currentUser === 'user1' ? 'user2' : 'user1'; };
@@ -1335,7 +1934,11 @@
                 };
                 const handleTripImageUpload = (e) => {
                     const file = e.target.files[0];
-                    if (file) { const reader = new FileReader(); reader.onload = (evt) => { newTrip.value.image = evt.target.result; }; reader.readAsDataURL(file); }
+                    if (file) {
+                        const reader = new FileReader();
+                        reader.onload = (evt) => { newTrip.value.image = evt.target.result; };
+                        reader.readAsDataURL(file);
+                    }
                 };
                 const saveNewTrip = () => {
                     const tripImage = newTrip.value.image || 'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?auto=format&fit=crop&w=800&q=80';
@@ -1347,15 +1950,39 @@
                 };
 
                 const autoResize = (el) => { if (!el) return; el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px'; };
-                const resizeAllTextareas = () => { nextTick(() => { const textareas = document.querySelectorAll('.auto-resize-textarea'); textareas.forEach(el => autoResize(el)); }); };
 
-                watch(filteredItinerary, () => { if (currentView.value === 'list') resizeAllTextareas(); }, { deep: true });
-                watch(selectedDate, (newVal, oldVal) => { if (newVal.full !== oldVal?.full) { updateDashboardContext(); } });
+                const resizeAllTextareas = () => {
+                    nextTick(() => {
+                        const textareas = document.querySelectorAll('.auto-resize-textarea');
+                        textareas.forEach(el => autoResize(el));
+                    });
+                };
+
+                watch(filteredItinerary, () => {
+                    if (currentView.value === 'list') resizeAllTextareas();
+                }, { deep: true });
+                
+                watch(selectedDate, (newVal, oldVal) => {
+                    if (newVal.full !== oldVal?.full) {
+                        updateDashboardContext();
+                    }
+                });
 
                 const switchView = (view) => { 
                     currentView.value = view; 
-                    if (view === 'map') { nextTick(() => { setTimeout(() => { initMap(); if(mapInstance.value) mapInstance.value.invalidateSize(); }, 200); }); } 
-                    else { nextTick(() => { initSortable(); resizeAllTextareas(); }); } 
+                    if (view === 'map') { 
+                        nextTick(() => { 
+                            setTimeout(() => { 
+                                initMap(); 
+                                if(mapInstance.value) mapInstance.value.invalidateSize(); 
+                            }, 200); 
+                        }); 
+                    } else { 
+                        nextTick(() => {
+                            initSortable(); 
+                            resizeAllTextareas();
+                        });
+                    } 
                 };
 
                 const openEditModal = (trip) => { editingTrip.value = { ...trip, start: trip.startDate, end: trip.endDate }; showDeleteConfirmModal.value = false; showEditTripModal.value = true; };
@@ -1364,7 +1991,13 @@
                 const confirmDelete = () => { const index = trips.value.findIndex(t => t.id === editingTrip.value.id); if (index !== -1) trips.value.splice(index, 1); showDeleteConfirmModal.value = false; showEditTripModal.value = false; };
                 const getDepartureTime = (start, durationHr, durationMin) => { if (!start) return '--:--'; const [h, m] = start.split(':').map(Number); let endH = h + parseInt(durationHr); let endM = m + parseInt(durationMin); if (endM >= 60) { endH += Math.floor(endM / 60); endM = endM % 60; } endH = endH % 24; return `${String(endH).padStart(2, '0')}:${String(endM).padStart(2, '0')}`; };
                 
-                const getCategoryIcon = (type) => { if(type === 'airport') return 'fa-solid fa-plane'; if(type === 'hotel') return 'fa-solid fa-hotel'; if(type === 'food') return 'fa-solid fa-utensils'; return 'fa-solid fa-location-dot'; };
+                const getCategoryIcon = (type) => { 
+                    if(type === 'airport') return 'fa-solid fa-plane'; 
+                    if(type === 'hotel') return 'fa-solid fa-hotel'; 
+                    if(type === 'food') return 'fa-solid fa-utensils'; 
+                    return 'fa-solid fa-location-dot'; 
+                };
+                
                 const getMarkerColor = (type) => { if(type === 'airport') return '#a8a29e'; if(type === 'hotel') return '#818cf8'; if(type === 'food') return '#fbbf24'; return '#60a5fa'; };
                 const getTypeBorderColor = (type) => getMarkerColor(type);
                 
@@ -1376,24 +2009,31 @@
                             sortableInstance = Sortable.create(el, { 
                                 animation: 200, delay: 300, delayOnTouchOnly: true, touchStartThreshold: 5, ghostClass: 'sortable-ghost', dragClass: 'sortable-drag', chosenClass: 'sortable-chosen', filter: ".no-drag", preventOnFilter: false, 
                                 onEnd: (evt) => { 
+                                    const newIndex = evt.newIndex;
+                                    const oldIndex = evt.oldIndex;
                                     const dayStr = selectedDate.value.full;
                                     const otherDaysItems = itinerary.value.filter(i => i.date !== dayStr);
                                     let newDayItems = itinerary.value.filter(i => i.date === dayStr); 
                                     const newOrderIds = sortableInstance.toArray(); 
                                     const reorderedDayItems = newOrderIds.map(id => newDayItems.find(i => i.id == id)).filter(i => i); 
+                                    // Update array, watcher will sync to Firebase
                                     itinerary.value = [...otherDaysItems, ...reorderedDayItems];
                                     recalcTimeline(); 
                                 } 
                             }); 
                         } 
                     }, 350); 
+
                     if (tripSortableInstance) { tripSortableInstance.destroy(); tripSortableInstance = null; }
                     setTimeout(() => {
                         const tripListEl = document.getElementById('trip-list');
                         if (tripListEl && typeof Sortable !== 'undefined') {
-                            tripSortableInstance = Sortable.create(tripListEl, { 
+                            tripSortableInstance = Sortable.create(tripListEl, {
                                 animation: 200, delay: 300, delayOnTouchOnly: true, touchStartThreshold: 5, ghostClass: 'sortable-ghost', dragClass: 'sortable-drag', chosenClass: 'sortable-chosen', filter: ".no-drag", preventOnFilter: false,
-                                onEnd: (evt) => { const item = trips.value.splice(evt.oldIndex, 1)[0]; trips.value.splice(evt.newIndex, 0, item); }
+                                onEnd: (evt) => {
+                                    const item = trips.value.splice(evt.oldIndex, 1)[0];
+                                    trips.value.splice(evt.newIndex, 0, item);
+                                }
                             });
                         }
                     }, 350);
@@ -1403,9 +2043,12 @@
                     const list = filteredItinerary.value; 
                     if (list.length === 0) return; 
                     if (!list[0].arrivalTime) list[0].arrivalTime = '09:00'; 
+                    
                     for (let i = 0; i < list.length - 1; i++) { 
-                        const curr = list[i]; const next = list[i+1];
-                        if (!curr.isManualTravelTime) {
+                        const curr = list[i]; 
+                        const next = list[i+1];
+                        if (curr.isManualTravelTime) {
+                        } else {
                             const dist = getDistance(curr.lat, curr.lng, next.lat, next.lng); 
                             let speed = 30; if (curr.travelMode === 'walking') speed = 4; if (curr.travelMode === 'bus') speed = 15; 
                             let travelMins = Math.round((dist / speed) * 60); 
@@ -1414,19 +2057,26 @@
                             curr.calculatedTravelTime = travelMins;
                         }
                     }
+
                     updateArrivalTimes(list);
+
                     for (let i = 0; i < list.length - 1; i++) {
-                        const curr = list[i]; const next = list[i+1];
+                        const curr = list[i];
+                        const next = list[i+1];
                         if (!curr.isManualTravelTime) {
                             const realDurationMins = await fetchRouteDuration(curr.lat, curr.lng, next.lat, next.lng, curr.travelMode);
-                            if (realDurationMins !== null) { curr.calculatedTravelTime = realDurationMins; updateArrivalTimes(list); }
+                            if (realDurationMins !== null) {
+                                curr.calculatedTravelTime = realDurationMins;
+                                updateArrivalTimes(list);
+                            }
                         }
                     }
                 };
 
                 const updateArrivalTimes = (list) => {
                     for (let i = 0; i < list.length - 1; i++) {
-                        const curr = list[i]; const next = list[i+1];
+                        const curr = list[i];
+                        const next = list[i+1];
                         const [ph, pm] = curr.arrivalTime.split(':').map(Number); 
                         const prevStartMins = ph * 60 + pm; 
                         const prevDurationMins = (curr.durationHr || 0) * 60 + (curr.durationMin || 0); 
@@ -1462,21 +2112,30 @@
                     return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(query)}`;
                 };
 
-                const openGoogleMaps = (item) => { const url = getMapUrl(item); if (url !== '#') window.open(url, '_blank'); };
                 const openHotelModal = () => { hotelForm.value = { ...info.value.hotel.list[info.value.hotel.currentIndex] }; showHotelModal.value = true; };
                 
                 const proceedToHotelMapConfirm = async () => { 
-                    const DEFAULT_LAT = 25.0330; const DEFAULT_LNG = 121.5654;
+                    const DEFAULT_LAT = 25.0330;
+                    const DEFAULT_LNG = 121.5654;
                     if (hotelForm.value.name) { 
                         try { 
                             const query = encodeURIComponent(hotelForm.value.name); 
                             const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${query}&limit=1`); 
                             const data = await response.json(); 
-                            if (data && data.length > 0) { hotelForm.value.lat = parseFloat(data[0].lat); hotelForm.value.lng = parseFloat(data[0].lon); } 
-                            else { hotelForm.value.lat = DEFAULT_LAT; hotelForm.value.lng = DEFAULT_LNG; }
-                        } catch (e) { hotelForm.value.lat = DEFAULT_LAT; hotelForm.value.lng = DEFAULT_LNG; } 
+                            if (data && data.length > 0) { 
+                                hotelForm.value.lat = parseFloat(data[0].lat); 
+                                hotelForm.value.lng = parseFloat(data[0].lon); 
+                            } else {
+                                hotelForm.value.lat = DEFAULT_LAT;
+                                hotelForm.value.lng = DEFAULT_LNG;
+                            }
+                        } catch (e) { 
+                            hotelForm.value.lat = DEFAULT_LAT;
+                            hotelForm.value.lng = DEFAULT_LNG;
+                        } 
                     } 
-                    showHotelModal.value = false; showHotelMapModal.value = true; 
+                    showHotelModal.value = false; 
+                    showHotelMapModal.value = true; 
                     nextTick(() => initHotelMap()); 
                 };
                 
@@ -1484,138 +2143,92 @@
                 const confirmHotelLocation = () => { info.value.hotel.list[info.value.hotel.currentIndex] = { ...hotelForm.value }; showHotelMapModal.value = false; };
                 const toggleHotel = () => { info.value.hotel.currentIndex = (info.value.hotel.currentIndex + 1) % 5; };
 
-                // Checklist - Fix: Implemented long press logic
                 const openAddChecklistModal = (category) => { targetChecklistCategory.value = category; newChecklistItemName.value = ''; showAddChecklistModal.value = true; };
                 const confirmAddChecklistItem = () => { if (newChecklistItemName.value.trim()) { if (!info.value.checklist[targetChecklistCategory.value]) { info.value.checklist[targetChecklistCategory.value] = []; } info.value.checklist[targetChecklistCategory.value].push({ name: newChecklistItemName.value.trim(), checked: false }); } showAddChecklistModal.value = false; };
                 
-                const startLongPress = (category, index) => {
-                    longPressTimer.value = setTimeout(() => {
+                const checklistDeleteTarget = ref({ category: null, index: null });
+                let longPressTimer = null;
+                
+                const startLongPress = (category, index) => { 
+                    longPressTimer = setTimeout(() => {
                         checklistDeleteTarget.value = { category, index };
                         showDeleteChecklistConfirmModal.value = true;
-                    }, 800);
+                    }, 600); 
                 };
-                const clearLongPress = () => {
-                    if (longPressTimer.value) { clearTimeout(longPressTimer.value); longPressTimer.value = null; }
-                };
+                const clearLongPress = () => { if (longPressTimer) clearTimeout(longPressTimer); };
                 const toggleChecklist = (item) => { item.checked = !item.checked; };
-                const executeDeleteChecklistItem = () => {
+                const executeDeleteChecklistItem = () => { 
                     const { category, index } = checklistDeleteTarget.value;
-                    if (category && info.value.checklist[category]) { info.value.checklist[category].splice(index, 1); }
-                    showDeleteChecklistConfirmModal.value = false;
+                    if (category && index !== null && info.value.checklist[category]) {
+                        info.value.checklist[category].splice(index, 1);
+                    }
+                    showDeleteChecklistConfirmModal.value = false; 
                 };
 
-                // Flight - Fix: Implemented calculation logic
                 const openFlightModal = (type) => { editingFlightType.value = type; const currentData = info.value.flight[type]; let depTimeStr = currentData.dep || ''; let arrTimeStr = currentData.arr || ''; flightForm.value = { depAirport: currentData.depAirport, arrAirport: currentData.arrAirport, number: currentData.number, depTime: depTimeStr, arrTime: arrTimeStr, arrDayOffset: currentData.arrDayOffset || 0, duration: currentData.duration }; showFlightModal.value = true; };
                 
-                const getAirportOffset = async (query) => {
-                    if (!query) return 0;
+                const getAirportOffsetMinutes = async (query) => {
                     try {
-                        const q = encodeURIComponent(query.includes('airport') ? query : query + ' airport');
-                        const geoRes = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${q}&limit=1`);
+                        const geoRes = await fetch(`https://nominatim.openstreetmap.org/search?q=${query}+airport&format=json&limit=1`);
                         const geoData = await geoRes.json();
-                        if (!geoData || geoData.length === 0) return 0;
-
-                        const lat = geoData[0].lat;
-                        const lon = geoData[0].lon;
-
-                        const tzRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m&timezone=auto`);
+                        if (!geoData || geoData.length === 0) return null;
+                        const { lat, lon } = geoData[0];
+                        const tzRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=weather_code&timezone=auto`);
                         const tzData = await tzRes.json();
-                        
-                        return (tzData.utc_offset_seconds || 0) / 60; // return minutes
-                    } catch (e) {
-                        console.error("Timezone fetch failed", e);
-                        return 0;
-                    }
+                        return tzData.utc_offset_seconds / 60;
+                    } catch (e) { console.error(`Failed to get offset for ${query}`, e); return null; }
                 };
-                
+
                 const saveFlight = async () => { 
                     isCalculatingFlight.value = true; 
                     try { 
                         const { depTime, arrTime, depAirport, arrAirport, arrDayOffset } = flightForm.value; 
-                        
-                        const [depOffset, arrOffset] = await Promise.all([
-                            getAirportOffset(depAirport),
-                            getAirportOffset(arrAirport)
-                        ]);
-
-                        const [depH, depM] = depTime.includes(':') ? depTime.split(':') : ['00', '00']; 
-                        const [arrH, arrM] = arrTime.includes(':') ? arrTime.split(':') : ['00', '00']; 
-                        
-                        const depMinLocal = parseInt(depH) * 60 + parseInt(depM); 
-                        const arrMinLocal = parseInt(arrH) * 60 + parseInt(arrM) + (arrDayOffset * 1440); 
-                        
-                        const depMinUTC = depMinLocal - depOffset;
-                        const arrMinUTC = arrMinLocal - arrOffset;
-
-                        let diff = arrMinUTC - depMinUTC; 
-                        
-                        const hours = Math.floor(diff / 60); 
-                        const minutes = diff % 60; 
-                        const calculatedDuration = `${hours}h ${minutes}m`; 
-                        
-                        info.value.flight[editingFlightType.value] = { ...info.value.flight[editingFlightType.value], depAirport, arrAirport, number: flightForm.value.number, dep: depTime, arr: arrTime, arrDayOffset, duration: calculatedDuration }; 
-                    } catch (e) { console.error("Flight calculation error", e); } 
-                    finally { isCalculatingFlight.value = false; showFlightModal.value = false; } 
+                        let calculatedDuration = ""; 
+                        if (depAirport && arrAirport && depTime && arrTime) { 
+                            const depOffsetMinutes = await getAirportOffsetMinutes(depAirport);
+                            const arrOffsetMinutes = await getAirportOffsetMinutes(arrAirport);
+                            if (depOffsetMinutes !== null && arrOffsetMinutes !== null) {
+                                const [depH, depM] = depTime.split(':').map(Number);
+                                const [arrH, arrM] = arrTime.split(':').map(Number);
+                                const depUtcMinutes = (depH * 60 + depM) - depOffsetMinutes;
+                                const arrUtcMinutes = (arrH * 60 + arrM) - arrOffsetMinutes + (arrDayOffset * 24 * 60);
+                                let diffMinutes = arrUtcMinutes - depUtcMinutes;
+                                if (diffMinutes < 0) diffMinutes += (24 * 60);
+                                const hours = Math.floor(diffMinutes / 60);
+                                const minutes = Math.floor(diffMinutes % 60);
+                                calculatedDuration = `${hours}h ${minutes}m`;
+                            }
+                        } 
+                        if (!calculatedDuration) { 
+                            const [depH, depM] = depTime.includes(':') ? depTime.split(':').map(Number) : [0,0]; 
+                            const [arrH, arrM] = arrTime.includes(':') ? arrTime.split(':').map(Number) : [0,0];
+                            const depMin = depH * 60 + depM; 
+                            const arrMin = arrH * 60 + arrM + (arrDayOffset * 1440); 
+                            let diff = arrMin - depMin; 
+                            if (diff < 0) diff += 1440; 
+                            const hours = Math.floor(diff / 60); 
+                            const minutes = diff % 60; 
+                            calculatedDuration = `${hours}h ${minutes}m (Est)`; 
+                        } 
+                        info.value.flight[editingFlightType.value] = { ...info.value.flight[editingFlightType.value], depAirport: flightForm.value.depAirport, arrAirport: flightForm.value.arrAirport, number: flightForm.value.number, dep: depTime, arr: arrTime, arrDayOffset: arrDayOffset, duration: calculatedDuration }; 
+                    } catch (e) { console.error("Flight calculation error", e); } finally { isCalculatingFlight.value = false; showFlightModal.value = false; } 
                 };
                 const toggleFlightType = () => { currentFlightType.value = currentFlightType.value === 'out' ? 'in' : 'out'; };
 
-                // Load Initial Data from Firebase
-                onMounted(async () => {
-                    const dataRef = dbRef(db, 'travel-app-data');
-                    try {
-                        const snapshot = await get(dataRef);
-                        if (snapshot.exists()) {
-                            const data = snapshot.val();
-                            if (data.trips) trips.value = data.trips;
-                            if (data.itinerary) itinerary.value = data.itinerary;
-                            if (data.expenses) expenses.value = data.expenses;
-                            if (data.info) info.value = data.info;
-                            if (data.currency) currency.value = data.currency;
-                            
-                            // Restore last session if possible
-                            if (data.lastTripId) {
-                                const lastTrip = trips.value.find(t => t.id === data.lastTripId);
-                                if (lastTrip) {
-                                    currentTrip.value = lastTrip;
-                                    // Optionally jump straight to detail view? Keeping home view for now but trip is selected.
-                                }
-                            }
-                        }
-                    } catch (error) {
-                        console.error("Firebase load error:", error);
-                    } finally {
-                        isLoading.value = false;
-                        
-                        // Setup logic dependent on data
-                        if (currentTrip.value && currentTrip.value.startDate && currentTrip.value.endDate) { 
-                            dates.value = generateTripDates(currentTrip.value.startDate, currentTrip.value.endDate); 
-                            selectedDate.value = dates.value[0] || {}; 
-                        } else {
-                            // Fallback if no current trip selected yet
-                            if (trips.value.length > 0) {
-                                currentTrip.value = trips.value[0];
-                                dates.value = generateTripDates(currentTrip.value.startDate, currentTrip.value.endDate); 
-                                selectedDate.value = dates.value[0] || {}; 
-                            }
-                        }
 
-                        updateDashboardContext();
-                        initSortable(); 
-                        timeInterval = setInterval(updateTime, 1000); 
-                        updateTime();
-                        fetchExchangeRates(); 
-                        resizeAllTextareas();
-                        
-                        // IMPORTANT: Setup watchers ONLY after initial load to avoid overwriting DB with defaults
-                        setupWatchers();
-                    }
+                onMounted(() => {
+                    if (currentTrip.value.startDate && currentTrip.value.endDate) { dates.value = generateTripDates(currentTrip.value.startDate, currentTrip.value.endDate); selectedDate.value = dates.value[0] || {}; }
+                    
+                    updateDashboardContext();
+
+                    initSortable(); timeInterval = setInterval(updateTime, 1000); updateTime();
+                    fetchExchangeRates(); 
+                    resizeAllTextareas();
                 });
-
                 onUnmounted(() => { if (timeInterval) clearInterval(timeInterval); });
 
                 return {
-                    isLoading,
-                    currentPage, trips, currentTrip, openTrip, currentTab, currentView, switchView, openGoogleMaps, selectedItem,
+                    currentPage, trips, currentTrip, openTrip, currentTab, currentView, switchView, selectedItem,
                     getTypeBorderColor, getMarkerColor, dates, selectedDate,
                     showAddTripModal, newTrip, saveNewTrip, openAddTripModal, handleTripImageUpload,
                     showEditTripModal, editingTrip, openEditModal, saveEditedTrip, deleteTrip, confirmDelete, showDeleteConfirmModal,
@@ -1637,7 +2250,8 @@
                     showFlightModal, flightForm, openFlightModal, saveFlight, editingFlightType, toggleFlightType, currentFlightType, isCalculatingFlight, timeSelectOptions,
                     autoResize, itemTypes, weatherLoading,
                     showTravelTimeModal, travelTimeForm, openTravelTimeModal, setTravelMode, saveTravelTime, formatTravelTime, getModeName,
-                    showTimeEditModal, editingHours, editingMinutes, openTimeEditModal, saveTime, validateTimeInput, validateDurationInput, getMapUrl
+                    showTimeEditModal, editingHours, editingMinutes, openTimeEditModal, saveTime, validateTimeInput,
+                    validateDurationInput, getMapUrl
                 };
             }
         }).mount('#app');
